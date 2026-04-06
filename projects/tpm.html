@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TPM Dashboard</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #000;
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+    }
+
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid #222;
+      height: 36px;
+    }
+
+    .header-bar a {
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .header-bar a:hover {
+      color: #aaaaaa;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 36px);
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <a href="/">sarthakjethi.com</a>
+    <span style="font-family:'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:500;color:#ffffff;">TPM Dashboard</span>
+  </div>
+
+  <iframe src="https://tesla-tpm.onrender.com" title="TPM Dashboard" allowfullscreen></iframe>
+
+</body>
+</html>
