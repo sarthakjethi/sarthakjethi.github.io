@@ -81,7 +81,7 @@
     }
 
     .section-heading {
-      font-size: 48px;
+      font-size: 58px;
       font-weight: 700;
       letter-spacing: -0.01em;
       margin-bottom: 40px;
@@ -90,15 +90,24 @@
 
     /* ── About ── */
     .about-content {
-      min-height: 80px;
       max-width: 640px;
+      padding: 40px;
+      cursor: default;
+      transition: background-color 0.15s ease, border-left 0.15s ease;
+      border-left: 2px solid transparent;
+    }
+
+    .about-content:hover {
+      background-color: #111;
+      border-left: 2px solid #EE352E;
     }
 
     .about-content p {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 500;
       line-height: 1.9;
-      color: #cccccc;
+      color: #ffffff;
+      font-family: "Helvetica Neue";
     }
 
     /* ── Projects ── */
@@ -116,7 +125,7 @@
     }
 
     .project-name {
-      font-size: 22px;
+      font-size: 26px;
       font-weight: 700;
       letter-spacing: -0.01em;
       margin-bottom: 16px;
@@ -124,10 +133,10 @@
     }
 
     .project-description {
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 500;
       line-height: 1.9;
-      color: #cccccc;
+      color: #ffffff;
       margin-bottom: 28px;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
@@ -145,7 +154,7 @@
       text-transform: uppercase;
       border: 1px solid #444;
       padding: 5px 12px;
-      color: #aaaaaa;
+      color: #cccccc;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
 
