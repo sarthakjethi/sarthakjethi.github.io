@@ -39,18 +39,20 @@
       align-items: center;
       justify-content: flex-end;
       padding: 28px 48px;
-      border-bottom: 1px solid #333;
+      max-width: 960px;
+      margin: 0 auto;
     }
 
     nav {
       display: flex;
-      gap: 48px;
+      gap: 32px;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
 
     nav a {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.01em;
       color: #ffffff;
       text-decoration: none;
       transition: color 0.15s ease;
@@ -64,20 +66,24 @@
     /* ── Hero ── */
     .hero {
       padding: 100px 48px 80px;
+      max-width: 960px;
+      margin: 0 auto;
     }
 
     .hero h1 {
-      font-size: clamp(52px, 9vw, 120px);
+      font-size: clamp(46.8px, 8.1vw, 108px);
       font-weight: 700;
       letter-spacing: normal;
       line-height: 1;
+      text-align: center;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
 
     /* ── Sections ── */
     section {
       padding: 80px 48px;
-      border-top: 1px solid #222;
+      max-width: 960px;
+      margin: 0 auto;
     }
 
     .section-heading {
@@ -85,6 +91,7 @@
       font-weight: 700;
       letter-spacing: -0.01em;
       margin-bottom: 40px;
+      text-align: center;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
 
@@ -93,13 +100,14 @@
       max-width: 640px;
       padding: 40px;
       cursor: default;
-      transition: background-color 0.15s ease, border-left 0.15s ease;
+      transition: transform 0.2s ease;
       border-left: 2px solid transparent;
+      border-radius: 4px;
+      margin: 0 auto;
     }
 
     .about-content:hover {
-      background-color: #111;
-      border-left: 2px solid #0039A6;
+      transform: translateY(-4px);
     }
 
     .about-content p {
@@ -120,13 +128,14 @@
       padding: 40px;
       max-width: 640px;
       cursor: pointer;
-      transition: background-color 0.15s ease, border-left 0.15s ease;
+      transition: transform 0.2s ease;
       border-left: 2px solid transparent;
+      border-radius: 4px;
+      margin: 0 auto;
     }
 
     .project-card:hover {
-      background-color: #111;
-      border-left: 2px solid #EE352E;
+      transform: translateY(-4px);
     }
 
     .project-name {
@@ -168,7 +177,15 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-bottom: 0;
+      transition: transform 0.2s ease;
+      border-left: 2px solid transparent;
+      border-radius: 4px;
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    .linkedin-heading-row:hover {
+      transform: translateY(-4px);
     }
 
     .linkedin-badge {
@@ -218,7 +235,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 28px 48px;
-      border-top: 1px solid #333;
+      max-width: 960px;
+      margin: 0 auto;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
 
@@ -284,18 +302,11 @@
   <!-- Hero -->
   <div class="hero">
     <h1>Sarthak Jethi</h1>
-    <div style="display:flex;align-items:center;max-width:400px;margin-top:40px;">
-      <div style="width:24px;height:24px;border-radius:50%;background:#0039A6;flex-shrink:0;"></div>
-      <div style="flex:1;height:3px;background:#444;"></div>
-      <div style="width:24px;height:24px;border-radius:50%;background:#EE352E;flex-shrink:0;"></div>
-      <div style="flex:1;height:3px;background:#444;"></div>
-      <div style="width:24px;height:24px;border-radius:50%;background:#00933C;flex-shrink:0;"></div>
-    </div>
   </div>
 
   <!-- About -->
   <section id="about">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;justify-content:center;">
       <div style="width:28px;height:28px;border-radius:50%;background:#0039A6;flex-shrink:0;"></div>
       <h2 class="section-heading" style="margin-bottom:0;">About</h2>
     </div>
@@ -308,7 +319,7 @@
 
   <!-- Projects -->
   <section id="projects">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;justify-content:center;">
       <div style="width:28px;height:28px;border-radius:50%;background:#EE352E;flex-shrink:0;"></div>
       <h2 class="section-heading" style="margin-bottom:0;">Projects</h2>
     </div>
@@ -330,7 +341,7 @@
 
   <!-- LinkedIn -->
   <section id="linkedin">
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;justify-content:center;">
       <div style="width:28px;height:28px;border-radius:50%;background:#00933C;flex-shrink:0;"></div>
       <h2 class="section-heading" style="margin-bottom:0;">Let's Connect</h2>
     </div>
@@ -343,13 +354,6 @@
   <!-- Footer -->
   <footer>
     <span class="footer-left">sarthakjethi.com · 2026</span>
-    <div class="footer-dots">
-      <div class="footer-dot" style="background-color:#EE352E;"></div>
-      <div class="footer-dot" style="background-color:#0039A6;"></div>
-      <div class="footer-dot" style="background-color:#FF6319;"></div>
-      <div class="footer-dot" style="background-color:#00933C;"></div>
-      <div class="footer-dot" style="background-color:#FCCC0A;"></div>
-    </div>
   </footer>
 
 </body>
