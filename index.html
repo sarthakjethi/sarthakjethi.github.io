@@ -37,7 +37,7 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: center;
       padding: 28px 48px;
       max-width: 960px;
       margin: 0 auto;
@@ -50,7 +50,7 @@
     }
 
     nav a {
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 400;
       letter-spacing: 0.01em;
       color: #ffffff;
@@ -137,6 +137,7 @@
       box-shadow: 0 0 0 1px #111111;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
       margin: 0 auto;
+      position: relative;
     }
 
     .project-card:hover {
@@ -243,7 +244,7 @@
     footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       padding: 28px 48px;
       max-width: 960px;
       margin: 0 auto;
@@ -255,6 +256,7 @@
       font-weight: 500;
       color: #aaaaaa;
       font-family: "Helvetica Neue", Helvetica, sans-serif;
+      text-align: center;
     }
 
     .footer-dots {
@@ -334,6 +336,12 @@
       <h2 class="section-heading" style="margin-bottom:0;">Projects</h2>
     </div>
     <div class="project-card" onclick="window.location.href='/projects/tpm.html'">
+      <a href="/projects/tpm.html" style="position:absolute; top:20px; right:20px; opacity:0.6; transition:opacity 0.15s ease;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 3H3C2.44772 3 2 3.44772 2 4V13C2 13.5523 2.44772 14 3 14H12C12.5523 14 13 13.5523 13 13V10" stroke="#aaaaaa" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M9 2H14M14 2V7M14 2L7 9" stroke="#aaaaaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
       <p class="project-name">TPM Dashboard</p>
       <div class="project-description">
         <p>Technical Program Managers drive software from concept to completion, owning roadmaps, aligning engineering teams, and resolving risks at every stage. This dashboard simulates that workflow using real Tesla Autopilot data scraped from public release notes. Explore 118 versions and 1,782 features across 3 years of development.</p>
