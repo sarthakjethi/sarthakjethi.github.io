@@ -5,55 +5,1061 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TPM Dashboard</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
-      background-color: #000;
-      font-family: "Helvetica Neue", Helvetica, sans-serif;
-    }
-
-    .header-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 20px;
-      border-bottom: 1px solid #222;
-      height: 36px;
-    }
-
-    .header-bar a {
-      font-family: "Helvetica Neue", Helvetica, sans-serif;
-      font-size: 12px;
+    body {
+      background: #000;
+      color: #e0e0e0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       font-weight: 500;
-      color: #ffffff;
-      text-decoration: none;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
     }
 
-    .header-bar a:hover {
-      color: #aaaaaa;
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Loading ────────────────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0; background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; z-index: 9999;
+    }
+    .spin {
+      width: 36px; height: 36px;
+      border: 3px solid #1a1a1a; border-top-color: #EE352E;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-txt { color: #444; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+
+    /* ── Nav ────────────────────────────────────────────── */
+    #nav {
+      position: sticky; top: 0; z-index: 100;
+      background: #000;
+      border-bottom: 2px solid #EE352E;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 28px; height: 44px;
+    }
+    .nav-brand {
+      color: #fff; font-size: 13px; font-weight: 700;
+      letter-spacing: .04em; cursor: pointer;
+    }
+    .nav-brand:hover { color: #EE352E; }
+    .nav-links { display: flex; gap: 22px; align-items: center; }
+    .nav-link {
+      color: #666; font-size: 11px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer; transition: color .15s;
+      border: none; background: none; padding: 0;
+      font-family: inherit;
+    }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active { color: #fff; }
+
+    /* ── Page layout ────────────────────────────────────── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 36px 24px 64px; }
+
+    .page-heading { margin-bottom: 28px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .page-subtitle { font-size: 12px; color: #555; }
+
+    /* ── Stat grid ──────────────────────────────────────── */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-bottom: 28px;
+    }
+    .stat-box {
+      background: #0a0a0a; border: 1px solid #1e1e1e;
+      padding: 20px; border-radius: 2px;
+    }
+    .stat-val {
+      font-size: 38px; font-weight: 700; color: #fff;
+      line-height: 1; font-variant-numeric: tabular-nums;
+    }
+    .stat-lbl {
+      font-size: 10px; color: #555;
+      letter-spacing: .12em; text-transform: uppercase; margin-top: 8px;
     }
 
-    iframe {
-      display: block;
-      width: 100%;
-      height: calc(100vh - 36px);
-      border: none;
+    /* ── Cards ──────────────────────────────────────────── */
+    .card {
+      background: #0a0a0a; border: 1px solid #1e1e1e;
+      border-radius: 2px; padding: 20px; margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase;
+      color: #EE352E; margin-bottom: 18px;
+    }
+
+    /* ── Section sub-header ─────────────────────────────── */
+    .sec-hdr {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: #444; margin: 20px 0 10px;
+    }
+    .sec-hdr:first-child { margin-top: 0; }
+
+    /* ── Status badges ──────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: 2px 7px; border-radius: 2px;
+      font-size: 9px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; white-space: nowrap; line-height: 1.6;
+    }
+    .b-released { background: #00933C; color: #fff; }
+    .b-rc       { background: #0039A6; color: #fff; }
+    .b-fc       { background: #0039A6; color: #ddeeff; }
+    .b-dev      { background: #FF6319; color: #fff; }
+    .b-planned  { background: #222; color: #777; }
+
+    /* ── Status text colours ────────────────────────────── */
+    .t-released { color: #4ade80; }
+    .t-rc       { color: #60a5fa; }
+    .t-fc       { color: #fbbf24; }
+    .t-dev      { color: #FF6319; }
+    .t-planned  { color: #555; }
+
+    /* ── Tables ─────────────────────────────────────────── */
+    .tscroll { overflow-x: auto; }
+    table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.tbl th {
+      text-align: left; padding: 7px 12px;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: #444; border-bottom: 1px solid #1e1e1e; white-space: nowrap;
+    }
+    table.tbl td {
+      padding: 8px 12px; border-bottom: 1px solid #111;
+      color: #aaa; vertical-align: middle;
+    }
+    table.tbl tr:last-child td { border-bottom: none; }
+    table.tbl tbody tr:hover td { background: #0f0f0f; }
+    .th-r, .td-r { text-align: right; }
+    .th-c, .td-c { text-align: center; }
+    .tbl .row-group td {
+      background: #111; color: #fff;
+      font-weight: 700; font-size: 11px;
+    }
+    .tbl .row-sub td { padding-left: 28px; }
+    .mono { font-variant-numeric: tabular-nums; }
+    .nowrap { white-space: nowrap; }
+
+    /* ── Program status strip ───────────────────────────── */
+    .status-counts {
+      display: flex; border: 1px solid #1e1e1e;
+      border-radius: 2px; overflow: hidden; margin-bottom: 18px;
+    }
+    .sc-item {
+      flex: 1; padding: 14px 16px;
+      border-right: 1px solid #1e1e1e; text-align: center;
+    }
+    .sc-item:last-child { border-right: none; }
+    .sc-val { font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+    .sc-lbl { font-size: 9px; color: #555; letter-spacing: .1em; text-transform: uppercase; margin-top: 5px; }
+
+    /* ── Velocity metrics ───────────────────────────────── */
+    .vel-metrics { display: flex; gap: 32px; flex-wrap: wrap; }
+    .vel-m .val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
+    .vel-m .lbl { font-size: 9px; color: #555; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+
+    /* ── Velocity bar chart ─────────────────────────────── */
+    .vel-chart { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin: 16px 0 4px; }
+    .vcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; }
+    .vbar { width: 100%; background: #EE352E; border-radius: 1px 1px 0 0; min-height: 0; }
+    .vlbl { font-size: 8px; color: #444; white-space: nowrap; letter-spacing: .03em; }
+    .vval { font-size: 9px; color: #666; height: 12px; }
+
+    /* ── Hardware gap ───────────────────────────────────── */
+    .hw-row { margin-bottom: 12px; }
+    .hw-hdr { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-bottom: 5px; }
+    .hw-pct { color: #EE352E; font-weight: 700; }
+    .hw-track { height: 6px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+    .hw-fill  { height: 100%; background: #EE352E; border-radius: 2px; }
+
+    /* ── Engineer cards ─────────────────────────────────── */
+    .eng-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px; margin-bottom: 20px;
+    }
+    .eng-card { background: #111; border: 1px solid #1e1e1e; padding: 14px; border-radius: 2px; }
+    .eng-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .eng-team { font-size: 9px; color: #EE352E; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+    .eng-spec { font-size: 10px; color: #555; line-height: 1.4; margin-bottom: 10px; min-height: 28px; }
+    .eng-stats { display: flex; gap: 14px; }
+    .eng-stat .v { font-size: 20px; font-weight: 700; color: #fff; line-height: 1; }
+    .eng-stat .l { font-size: 8px; color: #444; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
+
+    /* ── Seniority pill ─────────────────────────────────── */
+    .seniority {
+      display: inline-block; padding: 1px 6px; border-radius: 2px;
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .sen-senior { background: #003320; color: #4ade80; }
+    .sen-mid    { background: #1a1400; color: #fbbf24; }
+    .sen-junior { background: #1a0a00; color: #FF6319; }
+
+    /* ── Risk severity ──────────────────────────────────── */
+    .sev { font-weight: 700; }
+    .sev-critical { color: #EE352E; }
+    .sev-high     { color: #FF6319; }
+    .sev-medium   { color: #fbbf24; }
+    .sev-low      { color: #4ade80; }
+
+    /* ── Inputs & buttons ───────────────────────────────── */
+    .input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .input-row label { font-size: 10px; color: #555; letter-spacing: .1em; text-transform: uppercase; min-width: 30px; }
+    input[type="date"] {
+      background: #111; border: 1px solid #2a2a2a; color: #fff;
+      padding: 7px 12px; font-family: inherit; font-size: 12px;
+      font-weight: 500; border-radius: 2px; outline: none;
+    }
+    input[type="date"]:focus { border-color: #EE352E; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); }
+    .btn {
+      background: #EE352E; color: #fff; border: none;
+      padding: 7px 18px; font-family: inherit; font-size: 11px;
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer; border-radius: 2px; transition: background .15s;
+    }
+    .btn:hover { background: #c02b25; }
+    .btn-ghost {
+      background: transparent; color: #555;
+      border: 1px solid #222;
+    }
+    .btn-ghost:hover { background: #111; color: #fff; border-color: #444; }
+
+    /* ── Home cards ─────────────────────────────────────── */
+    .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+    .home-card { background: #0a0a0a; border: 1px solid #1e1e1e; padding: 22px; border-radius: 2px; }
+    .home-card-title {
+      font-size: 10px; font-weight: 700; letter-spacing: .16em;
+      text-transform: uppercase; color: #EE352E; margin-bottom: 10px;
+    }
+    .home-card-desc { font-size: 11px; color: #555; margin-bottom: 16px; line-height: 1.5; }
+
+    /* ── Inline progress bar ────────────────────────────── */
+    .prog { display: inline-block; width: 60px; height: 3px; background: #222; border-radius: 2px; overflow: hidden; vertical-align: middle; }
+    .prog-fill { height: 100%; background: #00933C; border-radius: 2px; }
+
+    /* ── Status transition matrix ───────────────────────── */
+    .mat-wrap { overflow-x: auto; }
+    table.mat { border-collapse: collapse; font-size: 11px; }
+    table.mat th { padding: 6px 10px; color: #444; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid #1a1a1a; font-weight: 700; white-space: nowrap; background: #0a0a0a; }
+    table.mat td { padding: 6px 10px; color: #333; border: 1px solid #1a1a1a; text-align: center; }
+    table.mat td.nz { color: #ddd; font-weight: 700; }
+
+    /* ── Misc ───────────────────────────────────────────── */
+    hr.div { border: none; border-top: 1px solid #111; margin: 18px 0; }
+    .empty { color: #333; font-size: 12px; padding: 20px 12px; }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .home-cards { grid-template-columns: 1fr; }
+      .status-counts { flex-wrap: wrap; }
+      .sc-item { min-width: 90px; }
+    }
+    @media (max-width: 600px) {
+      .page { padding: 20px 14px 48px; }
+      .eng-grid { grid-template-columns: repeat(2, 1fr); }
+      #nav { padding: 0 16px; }
+      .nav-links { gap: 14px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="header-bar">
-    <a href="/">sarthakjethi.com</a>
-    <span style="font-family:'Helvetica Neue',Helvetica,sans-serif;font-size:12px;font-weight:500;color:#ffffff;">TPM Dashboard</span>
+<!-- ── Loading ────────────────────────────────────────────── -->
+<div id="loading">
+  <div class="spin"></div>
+  <div class="load-txt">Loading dashboard data…</div>
+</div>
+
+<!-- ── App ────────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+
+  <nav id="nav">
+    <span class="nav-brand" onclick="showPage('home')">● TPM Dashboard</span>
+    <div class="nav-links">
+      <a class="nav-link" href="/">Home</a>
+      <button class="nav-link" data-page="home"     onclick="showPage('home')">Dashboard</button>
+      <button class="nav-link" data-page="snapshot" onclick="goSnapshot()">Snapshot</button>
+      <button class="nav-link" data-page="compare"  onclick="goCompare()">Compare</button>
+    </div>
+  </nav>
+
+  <!-- ── HOME ─────────────────────────────────────────── -->
+  <div id="page-home" class="page">
+    <div class="page-heading">
+      <div class="page-title">TPM Dashboard</div>
+      <div class="page-subtitle">Tesla Software Program Tracker — select a date to explore program state</div>
+    </div>
+    <div class="stat-grid" id="home-stats"></div>
+    <div class="home-cards">
+      <div class="home-card">
+        <div class="home-card-title">Program Snapshot</div>
+        <div class="home-card-desc">View feature lifecycle, release roadmap, team activity, and risk register at any point in time.</div>
+        <div class="input-row">
+          <label>Date</label>
+          <input type="date" id="snap-date">
+          <button class="btn" onclick="goSnapshot()">View Snapshot</button>
+        </div>
+      </div>
+      <div class="home-card">
+        <div class="home-card-title">Period Comparison</div>
+        <div class="home-card-desc">Compare feature throughput, engineer productivity, and velocity across two dates.</div>
+        <div class="input-row">
+          <label>From</label>
+          <input type="date" id="cmp-from">
+        </div>
+        <div class="input-row">
+          <label>To</label>
+          <input type="date" id="cmp-to">
+          <button class="btn" onclick="goCompare()">Compare</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <iframe src="https://tesla-tpm.onrender.com" title="TPM Dashboard" allowfullscreen></iframe>
+  <!-- ── SNAPSHOT ──────────────────────────────────────── -->
+  <div id="page-snapshot" class="page" style="display:none">
+    <div class="input-row" style="margin-bottom:24px">
+      <label>Date</label>
+      <input type="date" id="snap-date2">
+      <button class="btn" onclick="runSnapshot()">Refresh</button>
+      <button class="btn btn-ghost" onclick="showPage('home')">← Home</button>
+    </div>
+    <div id="snapshot-content"></div>
+  </div>
 
+  <!-- ── COMPARE ───────────────────────────────────────── -->
+  <div id="page-compare" class="page" style="display:none">
+    <div class="input-row" style="margin-bottom:24px;flex-wrap:wrap">
+      <label>From</label>
+      <input type="date" id="cmp-from2">
+      <label>To</label>
+      <input type="date" id="cmp-to2">
+      <button class="btn" onclick="runCompare()">Refresh</button>
+      <button class="btn btn-ghost" onclick="showPage('home')">← Home</button>
+    </div>
+    <div id="compare-content"></div>
+  </div>
+
+</div><!-- /#app -->
+
+<script>
+// ─── GLOBALS ──────────────────────────────────────────────────────────────────
+let DATA = null;
+let GROUP_MAP = {}, SUB_MAP = {}, ENG_MAP = {};
+
+// ─── DATE UTILITIES ───────────────────────────────────────────────────────────
+function parseDate(s) {
+  if (!s) return null;
+  s = String(s).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const t = Date.parse(s);
+  return isNaN(t) ? null : new Date(t);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function isoDate(d) {
+  if (!d) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function todayDate() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+function daysAgo(n)   { const d = todayDate(); d.setDate(d.getDate()-n); return d; }
+
+// ─── STATUS ENGINE ────────────────────────────────────────────────────────────
+function computeStatus(f, date) {
+  const rc = parseDate(f.release_complete_date);
+  const fc = parseDate(f.feature_complete_date);
+  const ds = parseDate(f.dev_start_date);
+  if (rc) {
+    if (date >= new Date(rc.getTime() + 14*86400000)) return 'released';
+    if (date >= rc) return 'release_complete';
+  }
+  if (fc && date >= fc) return 'feature_complete';
+  if (ds && date >= ds) return 'in_development';
+  return 'planned';
+}
+
+const BADGE_CLS = { released:'b-released', release_complete:'b-rc', feature_complete:'b-fc', in_development:'b-dev', planned:'b-planned' };
+const BADGE_TXT = { released:'Released', release_complete:'RC', feature_complete:'FC', in_development:'In Dev', planned:'Planned' };
+const TEXT_CLS  = { released:'t-released', release_complete:'t-rc', feature_complete:'t-fc', in_development:'t-dev', planned:'t-planned' };
+const STATUS_LABEL = { released:'Released', release_complete:'Release Complete', feature_complete:'Feature Complete', in_development:'In Development', planned:'Planned' };
+
+function badge(s) { return `<span class="badge ${BADGE_CLS[s]||'b-planned'}">${BADGE_TXT[s]||s}</span>`; }
+function stxt(s)  { return `<span class="${TEXT_CLS[s]||'t-planned'}">${STATUS_LABEL[s]||s}</span>`; }
+
+function sevCls(v) {
+  const m = { critical:'sev-critical', high:'sev-high', medium:'sev-medium', low:'sev-low' };
+  return `sev ${m[(v||'').toLowerCase()]||''}`;
+}
+
+// ─── DATA HELPERS ─────────────────────────────────────────────────────────────
+function featuresAt(date) {
+  return DATA.features.map(f => ({ ...f, _s: computeStatus(f, date) }));
+}
+
+function countStatus(features) {
+  const c = { planned:0, in_development:0, feature_complete:0, release_complete:0, released:0 };
+  for (const f of features) c[f._s] = (c[f._s]||0) + 1;
+  return c;
+}
+
+function velocityByMonth(date, n) {
+  const out = [];
+  for (let i = n-1; i >= 0; i--) {
+    const ms = new Date(date.getFullYear(), date.getMonth()-i, 1);
+    const me = new Date(date.getFullYear(), date.getMonth()-i+1, 0, 23, 59, 59);
+    let cnt = 0;
+    for (const f of DATA.features) {
+      const rc = parseDate(f.release_complete_date);
+      if (!rc) continue;
+      const rel = new Date(rc.getTime() + 14*86400000);
+      if (rel >= ms && rel <= me) cnt++;
+    }
+    out.push({ label: ms.toLocaleDateString('en-US',{month:'short',year:'2-digit'}), n: cnt });
+  }
+  return out;
+}
+
+function velocityLast30(date) {
+  const from = new Date(date.getTime() - 30*86400000);
+  let c = 0;
+  for (const f of DATA.features) {
+    const rc = parseDate(f.release_complete_date);
+    if (!rc) continue;
+    const rel = new Date(rc.getTime() + 14*86400000);
+    if (rel > from && rel <= date) c++;
+  }
+  return c;
+}
+
+function avgCycleTime(features) {
+  let s = 0, n = 0;
+  for (const f of features) {
+    if (f._s !== 'released') continue;
+    const ds = parseDate(f.dev_start_date);
+    const rc = parseDate(f.release_complete_date);
+    if (!ds || !rc) continue;
+    const days = Math.round((new Date(rc.getTime()+14*86400000)-ds)/86400000);
+    if (days > 0 && days < 1000) { s+=days; n++; }
+  }
+  return n ? Math.round(s/n) : 0;
+}
+
+function hwGapByGroup(features) {
+  const m = {};
+  for (const g of DATA.groups) m[g.group_id] = { name:g.group_name, total:0, hw4:0 };
+  for (const f of features) {
+    const g = m[f.group_id]; if (!g) continue;
+    g.total++;
+    if ((f.hw_requirement||'').trim().toUpperCase() === 'HW4') g.hw4++;
+  }
+  return Object.values(m).filter(g => g.total > 0);
+}
+
+function engStats(features) {
+  const s = {};
+  for (const e of DATA.engineers) s[e.engineer_id] = { ...e, total:0, released:0, active:0 };
+  for (const f of features) {
+    const e = s[f.engineer_id]; if (!e) continue;
+    e.total++;
+    if (f._s === 'released') e.released++;
+    if (f._s === 'in_development' || f._s === 'feature_complete' || f._s === 'release_complete') e.active++;
+  }
+  return s;
+}
+
+function releaseRoadmap(features, date) {
+  const vm = {};
+  for (const f of features) {
+    if (!vm[f.version]) vm[f.version] = { version:f.version, release_date:f.release_date, counts:{planned:0,in_development:0,feature_complete:0,release_complete:0,released:0}, total:0 };
+    vm[f.version].counts[f._s]++;
+    vm[f.version].total++;
+  }
+  const ago90 = new Date(date.getTime() - 90*86400000);
+  const inflight=[], recent=[], upcoming=[];
+  for (const v of Object.values(vm)) {
+    const rd = parseDate(v.release_date);
+    const active = v.counts.in_development + v.counts.feature_complete + v.counts.release_complete;
+    const pct = v.total ? Math.round((v.counts.released/v.total)*100) : 0;
+    const row = { ...v, rd, pct };
+    if (active > 0) { inflight.push(row); }
+    else if (rd && rd <= date && rd >= ago90) { recent.push(row); }
+    else if (!rd || rd > date) { upcoming.push(row); }
+  }
+  const byDate = (a,b) => (!a.rd?1:!b.rd?-1:a.rd-b.rd);
+  inflight.sort(byDate);
+  recent.sort((a,b)=>byDate(b,a));
+  upcoming.sort(byDate);
+  return { inflight, recent, upcoming };
+}
+
+// ─── RENDER: ROADMAP TABLE ────────────────────────────────────────────────────
+function roadmapTable(rows, empty) {
+  if (!rows.length) return `<div class="empty">${empty}</div>`;
+  return `<div class="tscroll"><table class="tbl">
+    <thead><tr>
+      <th>Version</th><th>Release Date</th>
+      <th class="th-c">Total</th><th class="th-c t-dev">Dev</th>
+      <th class="th-c t-fc">FC</th><th class="th-c t-rc">RC</th>
+      <th class="th-c t-released">Released</th><th class="th-c">Progress</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td class="nowrap" style="color:#fff;font-weight:700">${r.version}</td>
+      <td class="nowrap" style="color:#666">${r.release_date||'—'}</td>
+      <td class="td-c mono">${r.total}</td>
+      <td class="td-c mono t-dev">${r.counts.in_development||''}</td>
+      <td class="td-c mono t-fc">${r.counts.feature_complete||''}</td>
+      <td class="td-c mono t-rc">${r.counts.release_complete||''}</td>
+      <td class="td-c mono t-released">${r.counts.released||''}</td>
+      <td class="td-c">
+        <span class="prog"><span class="prog-fill" style="width:${r.pct}%"></span></span>
+        <span style="font-size:10px;color:#555;margin-left:5px">${r.pct}%</span>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ─── RENDER: SNAPSHOT ─────────────────────────────────────────────────────────
+function renderSnapshot(dateStr) {
+  const date = parseDate(dateStr);
+  if (!date) { document.getElementById('snapshot-content').innerHTML='<div class="empty">Select a valid date above.</div>'; return; }
+
+  const feats = featuresAt(date);
+  const counts = countStatus(feats);
+  const total = feats.length;
+
+  // ── Program Status
+  const last30 = velocityLast30(date);
+  const cycle  = avgCycleTime(feats);
+  const vm3    = velocityByMonth(date, 3);
+  const avg3   = Math.round(vm3.reduce((s,v)=>s+v.n,0)/3);
+
+  const progStatus = `<div class="card">
+    <div class="card-title">Program Status</div>
+    <div class="status-counts">
+      <div class="sc-item"><div class="sc-val t-planned">${counts.planned}</div><div class="sc-lbl">Planned</div></div>
+      <div class="sc-item"><div class="sc-val t-dev">${counts.in_development}</div><div class="sc-lbl">In Development</div></div>
+      <div class="sc-item"><div class="sc-val t-fc">${counts.feature_complete}</div><div class="sc-lbl">Feature Complete</div></div>
+      <div class="sc-item"><div class="sc-val t-rc">${counts.release_complete}</div><div class="sc-lbl">Release Complete</div></div>
+      <div class="sc-item"><div class="sc-val t-released">${counts.released}</div><div class="sc-lbl">Released</div></div>
+    </div>
+    <div class="vel-metrics">
+      <div class="vel-m"><div class="val">${last30}</div><div class="lbl">Shipped last 30d</div></div>
+      <div class="vel-m"><div class="val">${avg3}</div><div class="lbl">Avg/month (3mo)</div></div>
+      <div class="vel-m"><div class="val">${cycle}d</div><div class="lbl">Avg cycle time</div></div>
+      <div class="vel-m"><div class="val">${Math.round((counts.released/total)*100)}%</div><div class="lbl">Overall complete</div></div>
+      <div class="vel-m"><div class="val">${counts.in_development+counts.feature_complete+counts.release_complete}</div><div class="lbl">In-flight</div></div>
+    </div>
+  </div>`;
+
+  // ── Release Roadmap
+  const rm = releaseRoadmap(feats, date);
+  const roadmap = `<div class="card">
+    <div class="card-title">Release Roadmap</div>
+    <div class="sec-hdr">In-Flight (${rm.inflight.length})</div>
+    ${roadmapTable(rm.inflight,'No in-flight releases at this date.')}
+    <div class="sec-hdr" style="margin-top:20px">Recently Released — last 90 days (${rm.recent.length})</div>
+    ${roadmapTable(rm.recent,'No releases in the last 90 days.')}
+    <div class="sec-hdr" style="margin-top:20px">Upcoming (${rm.upcoming.length})</div>
+    ${roadmapTable(rm.upcoming,'No upcoming releases.')}
+  </div>`;
+
+  // ── Feature Explorer
+  const gfm = {};
+  for (const f of feats) {
+    if (!gfm[f.group_id]) gfm[f.group_id] = {};
+    if (!gfm[f.group_id][f.subgroup_id]) gfm[f.group_id][f.subgroup_id] = [];
+    gfm[f.group_id][f.subgroup_id].push(f);
+  }
+  let feRows = '';
+  for (const g of DATA.groups) {
+    const subM = gfm[g.group_id]||{};
+    const gAll = Object.values(subM).flat();
+    if (!gAll.length) continue;
+    const gc = countStatus(gAll);
+    feRows += `<tr class="row-group">
+      <td>${g.group_name}</td>
+      <td class="td-c">${gAll.length}</td>
+      <td class="td-c t-planned">${gc.planned||'—'}</td>
+      <td class="td-c t-dev">${gc.in_development||'—'}</td>
+      <td class="td-c t-fc">${gc.feature_complete||'—'}</td>
+      <td class="td-c t-rc">${gc.release_complete||'—'}</td>
+      <td class="td-c t-released">${gc.released||'—'}</td>
+      <td class="td-c" style="color:#555">${Math.round(((gc.released||0)/gAll.length)*100)}%</td>
+    </tr>`;
+    for (const sub of DATA.subgroups.filter(s=>s.group_id===g.group_id)) {
+      const sf = subM[sub.subgroup_id]||[];
+      if (!sf.length) continue;
+      const sc = countStatus(sf);
+      feRows += `<tr class="row-sub">
+        <td style="color:#888">${sub.subgroup_name}</td>
+        <td class="td-c" style="color:#444">${sf.length}</td>
+        <td class="td-c t-planned">${sc.planned||'—'}</td>
+        <td class="td-c t-dev">${sc.in_development||'—'}</td>
+        <td class="td-c t-fc">${sc.feature_complete||'—'}</td>
+        <td class="td-c t-rc">${sc.release_complete||'—'}</td>
+        <td class="td-c t-released">${sc.released||'—'}</td>
+        <td class="td-c" style="color:#333">${Math.round(((sc.released||0)/sf.length)*100)}%</td>
+      </tr>`;
+    }
+  }
+  const feExplorer = `<div class="card">
+    <div class="card-title">Feature Explorer — Group &amp; Subgroup</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr>
+        <th>Group / Subgroup</th><th class="th-c">Total</th>
+        <th class="th-c">Planned</th><th class="th-c">Dev</th>
+        <th class="th-c">FC</th><th class="th-c">RC</th>
+        <th class="th-c">Released</th><th class="th-c">% Done</th>
+      </tr></thead>
+      <tbody>${feRows}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Team View
+  const es = engStats(feats);
+  const activeE = Object.values(es).filter(e=>e.active>0);
+  const senCls = s => ({senior:'sen-senior',mid:'sen-mid',junior:'sen-junior'}[s]||'sen-junior');
+
+  const engCards = activeE.length
+    ? activeE.map(e=>`<div class="eng-card">
+        <div class="eng-name">${e.name}</div>
+        <div class="eng-team">${e.team}</div>
+        <div class="eng-spec">${e.specialty}</div>
+        <div style="margin-bottom:8px"><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></div>
+        <div class="eng-stats">
+          <div class="eng-stat"><div class="v t-dev">${e.active}</div><div class="l">Active</div></div>
+          <div class="eng-stat"><div class="v t-released">${e.released}</div><div class="l">Released</div></div>
+          <div class="eng-stat"><div class="v" style="color:#444">${e.total}</div><div class="l">Total</div></div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty">No active engineers at this date.</div>';
+
+  const rosterRows = Object.values(es).map(e=>`<tr>
+    <td style="color:#fff;font-weight:700">${e.name}</td>
+    <td><span style="color:#EE352E;font-size:9px;text-transform:uppercase;letter-spacing:.08em">${e.team}</span></td>
+    <td><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></td>
+    <td class="td-c mono">${e.total}</td>
+    <td class="td-c t-released mono">${e.released}</td>
+    <td class="td-c t-dev mono">${e.active}</td>
+    <td style="font-size:11px;color:#555;max-width:220px">${e.specialty}</td>
+  </tr>`).join('');
+
+  const teamView = `<div class="card">
+    <div class="card-title">Team View</div>
+    <div class="sec-hdr">Active Engineers (${activeE.length})</div>
+    <div class="eng-grid">${engCards}</div>
+    <div class="sec-hdr">Full Roster</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr>
+        <th>Name</th><th>Team</th><th>Seniority</th>
+        <th class="th-c">Total</th><th class="th-c">Released</th><th class="th-c">Active</th>
+        <th>Specialty</th>
+      </tr></thead>
+      <tbody>${rosterRows}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Risk Register
+  const risks = DATA.risks.filter(r=>{
+    const raised = parseDate(r.raised_date);
+    const resolved = parseDate(r.resolved_date);
+    if (raised && raised > date) return false;
+    if (resolved && resolved < date) return false;
+    return true;
+  });
+  const riskRows = risks.length
+    ? risks.map(r=>`<tr>
+        <td style="color:#444;font-size:10px">${r.risk_id}</td>
+        <td style="color:#fff;font-weight:700">${r.title}</td>
+        <td><span class="${sevCls(r.severity)}">${r.severity}</span></td>
+        <td><span class="${sevCls(r.probability)}">${r.probability}</span></td>
+        <td><span class="${sevCls(r.impact)}">${r.impact}</span></td>
+        <td style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em">${r.owner_team}</td>
+        <td style="font-size:11px;color:#555;max-width:260px">${r.mitigation}</td>
+        <td><span style="font-size:10px;font-weight:700;text-transform:uppercase;${r.status==='open'?'color:#FF6319':'color:#4ade80'}">${r.status}</span></td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="empty">No active risks at this date.</td></tr>';
+
+  const riskReg = `<div class="card">
+    <div class="card-title">Risk Register (${risks.length})</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr>
+        <th>ID</th><th>Title</th><th>Severity</th><th>Prob</th><th>Impact</th>
+        <th>Owner</th><th>Mitigation</th><th>Status</th>
+      </tr></thead>
+      <tbody>${riskRows}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Hardware Gap
+  const hw = hwGapByGroup(feats);
+  const hw4total = feats.filter(f=>(f.hw_requirement||'').trim().toUpperCase()==='HW4').length;
+  const hwBars = hw.map(g=>{
+    const pct = g.total ? Math.round((g.hw4/g.total)*100) : 0;
+    return `<div class="hw-row">
+      <div class="hw-hdr">
+        <span>${g.name}</span>
+        <span><span class="hw-pct">${pct}% HW4-only</span> &nbsp;${g.hw4} / ${g.total} features</span>
+      </div>
+      <div class="hw-track"><div class="hw-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const hwSection = `<div class="card">
+    <div class="card-title">Hardware Gap — HW4-Only Feature Lock-out</div>
+    <div class="vel-metrics" style="margin-bottom:18px">
+      <div class="vel-m"><div class="val t-dev">${hw4total}</div><div class="lbl">HW4-only features</div></div>
+      <div class="vel-m"><div class="val t-released">${total-hw4total}</div><div class="lbl">Available HW3+HW4</div></div>
+      <div class="vel-m"><div class="val" style="color:#555">${total}</div><div class="lbl">Total features</div></div>
+    </div>
+    ${hwBars}
+  </div>`;
+
+  // ── Velocity Report
+  const velData = velocityByMonth(date, 12);
+  const maxV = Math.max(...velData.map(v=>v.n), 1);
+  const velBars = velData.map(v=>{
+    const h = v.n > 0 ? Math.max(Math.round((v.n/maxV)*76), 3) : 0;
+    return `<div class="vcol">
+      <div class="vval">${v.n||''}</div>
+      <div class="vbar" style="height:${h}px"></div>
+      <div class="vlbl">${v.label}</div>
+    </div>`;
+  }).join('');
+  const velTotal = velData.reduce((s,v)=>s+v.n,0);
+  const activeMo  = velData.filter(v=>v.n>0).length||1;
+
+  const velReport = `<div class="card">
+    <div class="card-title">Velocity Report — Features Released per Month (12mo)</div>
+    <div class="vel-chart">${velBars}</div>
+    <hr class="div">
+    <div class="vel-metrics">
+      <div class="vel-m"><div class="val">${velTotal}</div><div class="lbl">Features (12mo)</div></div>
+      <div class="vel-m"><div class="val">${Math.round(velTotal/activeMo)}</div><div class="lbl">Avg / active month</div></div>
+      <div class="vel-m"><div class="val">${cycle}d</div><div class="lbl">Avg cycle time</div></div>
+      <div class="vel-m"><div class="val">${Math.max(...velData.map(v=>v.n))}</div><div class="lbl">Peak month</div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('snapshot-content').innerHTML = `
+    <div class="page-heading">
+      <div class="page-title">Program Snapshot</div>
+      <div class="page-subtitle">Feature lifecycle status as of <strong style="color:#fff">${fmtDate(date)}</strong> &nbsp;—&nbsp; ${total.toLocaleString()} features across ${DATA.releases.length} releases</div>
+    </div>
+    ${progStatus}${roadmap}${feExplorer}${teamView}${riskReg}${hwSection}${velReport}
+  `;
+}
+
+// ─── RENDER: COMPARE ──────────────────────────────────────────────────────────
+function renderCompare(fromStr, toStr) {
+  const fromDate = parseDate(fromStr);
+  const toDate   = parseDate(toStr);
+  if (!fromDate || !toDate || fromDate >= toDate) {
+    document.getElementById('compare-content').innerHTML = '<div class="empty">Select valid From / To dates (From must be before To).</div>';
+    return;
+  }
+
+  const fromFeats = featuresAt(fromDate);
+  const toFeats   = featuresAt(toDate);
+
+  // Features that became released in window
+  const shipped = DATA.features.filter(f=>{
+    const rc = parseDate(f.release_complete_date); if (!rc) return false;
+    const rel = new Date(rc.getTime()+14*86400000);
+    return rel > fromDate && rel <= toDate;
+  });
+
+  // Versions released in window
+  const versInWindow = DATA.releases.filter(r=>{
+    const rd = parseDate(r.release_date);
+    return rd && rd > fromDate && rd <= toDate;
+  });
+
+  // Status transitions matrix
+  const STATUSES = ['planned','in_development','feature_complete','release_complete','released'];
+  const SHORT = { planned:'Plan', in_development:'Dev', feature_complete:'FC', release_complete:'RC', released:'Rel' };
+  const trans = {};
+  for (let i=0;i<DATA.features.length;i++) {
+    const fs = fromFeats[i]._s, ts = toFeats[i]._s;
+    if (fs !== ts) { const k=`${fs}||${ts}`; trans[k]=(trans[k]||0)+1; }
+  }
+
+  // Engineer productivity
+  const engProd = {};
+  for (const e of DATA.engineers) engProd[e.engineer_id] = {...e, shipped:0, started:0};
+  for (const f of DATA.features) {
+    const e = engProd[f.engineer_id]; if (!e) continue;
+    const rc = parseDate(f.release_complete_date);
+    if (rc) { const rel=new Date(rc.getTime()+14*86400000); if(rel>fromDate&&rel<=toDate) e.shipped++; }
+    const ds = parseDate(f.dev_start_date);
+    if (ds && ds>fromDate && ds<=toDate) e.started++;
+  }
+
+  // Features shipped by group
+  const byGroup = {};
+  for (const g of DATA.groups) byGroup[g.group_id]={name:g.group_name,shipped:0,total:0};
+  for (const f of DATA.features) { const g=byGroup[f.group_id]; if(g) g.total++; }
+  for (const f of shipped)       { const g=byGroup[f.group_id]; if(g) g.shipped++; }
+
+  // Active risks in window
+  const activeRisks = DATA.risks.filter(r=>{
+    const raised=parseDate(r.raised_date), resolved=parseDate(r.resolved_date);
+    if(raised && raised>toDate) return false;
+    if(resolved && resolved<=fromDate) return false;
+    return true;
+  });
+
+  // Velocity comparison
+  const windowDays = Math.round((toDate-fromDate)/86400000);
+  const prevFrom = new Date(fromDate.getTime()-windowDays*86400000);
+  const prevShipped = DATA.features.filter(f=>{
+    const rc=parseDate(f.release_complete_date); if(!rc) return false;
+    const rel=new Date(rc.getTime()+14*86400000);
+    return rel>prevFrom && rel<=fromDate;
+  }).length;
+
+  const activeEngCount = Object.values(engProd).filter(e=>e.shipped>0||e.started>0).length;
+  const velChange = prevShipped>0 ? Math.round(((shipped.length-prevShipped)/prevShipped)*100) : null;
+  const velTxt   = velChange===null ? '—' : (velChange>=0?`+${velChange}%`:`${velChange}%`);
+  const velColor = velChange===null ? '#555' : velChange>=0 ? '#4ade80' : '#EE352E';
+
+  // ── Stat boxes
+  const statBoxes = `<div class="stat-grid">
+    <div class="stat-box"><div class="stat-val">${versInWindow.length}</div><div class="stat-lbl">Versions Released</div></div>
+    <div class="stat-box"><div class="stat-val">${shipped.length}</div><div class="stat-lbl">Features Shipped</div></div>
+    <div class="stat-box"><div class="stat-val">${activeEngCount}</div><div class="stat-lbl">Active Engineers</div></div>
+    <div class="stat-box"><div class="stat-val">${activeRisks.length}</div><div class="stat-lbl">Active Risks</div></div>
+  </div>`;
+
+  // ── Features by group
+  const grpRows = Object.values(byGroup)
+    .filter(g=>g.shipped>0||g.total>0)
+    .sort((a,b)=>b.shipped-a.shipped)
+    .map(g=>{
+      const pct = g.total?Math.round((g.shipped/g.total)*100):0;
+      return `<tr>
+        <td style="color:#fff">${g.name}</td>
+        <td class="td-c t-released mono">${g.shipped}</td>
+        <td class="td-c" style="color:#444">${g.total}</td>
+        <td class="td-c" style="color:#555">${pct}%</td>
+      </tr>`;
+    }).join('');
+
+  const byGrpSection = `<div class="card">
+    <div class="card-title">Features Shipped by Group</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr><th>Group</th><th class="th-c">Shipped</th><th class="th-c">Total</th><th class="th-c">% of Group</th></tr></thead>
+      <tbody>${grpRows||'<tr><td colspan="4" class="empty">No features shipped in this window.</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Engineer productivity
+  const senCls = s=>({senior:'sen-senior',mid:'sen-mid',junior:'sen-junior'}[s]||'sen-junior');
+  const engRows = Object.values(engProd)
+    .filter(e=>e.shipped>0||e.started>0)
+    .sort((a,b)=>b.shipped-a.shipped)
+    .map(e=>`<tr>
+      <td style="color:#fff;font-weight:700">${e.name}</td>
+      <td><span style="color:#EE352E;font-size:9px;text-transform:uppercase;letter-spacing:.08em">${e.team}</span></td>
+      <td><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></td>
+      <td class="td-c t-released mono">${e.shipped}</td>
+      <td class="td-c t-dev mono">${e.started}</td>
+    </tr>`).join('');
+
+  const engSection = `<div class="card">
+    <div class="card-title">Engineer Productivity</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr><th>Engineer</th><th>Team</th><th>Seniority</th><th class="th-c">Shipped</th><th class="th-c">Started</th></tr></thead>
+      <tbody>${engRows||'<tr><td colspan="5" class="empty">No engineer activity in this window.</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Versions in window
+  const verRows = versInWindow
+    .sort((a,b)=>parseDate(a.release_date)-parseDate(b.release_date))
+    .map(r=>`<tr>
+      <td style="color:#fff;font-weight:700">${r.version}</td>
+      <td style="color:#666">${r.release_date}</td>
+      <td style="color:#555;font-size:11px">${r.fsd_version||'—'}</td>
+      <td class="td-c mono">${r.feature_count}</td>
+    </tr>`).join('');
+
+  const versSection = `<div class="card">
+    <div class="card-title">Versions Released in Window (${versInWindow.length})</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr><th>Version</th><th>Release Date</th><th>FSD Version</th><th class="th-c">Features</th></tr></thead>
+      <tbody>${verRows||'<tr><td colspan="4" class="empty">No versions released in this window.</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  // ── Status transitions + velocity
+  const matHdr = `<tr><th>FROM → TO</th>${STATUSES.map(s=>`<th class="${TEXT_CLS[s]}">${SHORT[s]}</th>`).join('')}</tr>`;
+  const matBody = STATUSES.map(fs=>`<tr>
+    <th class="${TEXT_CLS[fs]}">${SHORT[fs]}</th>
+    ${STATUSES.map(ts=>{const n=trans[`${fs}||${ts}`]||0;return`<td class="${n>0?'nz':''}">${n||''}</td>`;}).join('')}
+  </tr>`).join('');
+
+  const velSection = `<div class="card">
+    <div class="card-title">Velocity Comparison &amp; Status Transitions</div>
+    <div class="vel-metrics" style="margin-bottom:20px">
+      <div class="vel-m"><div class="val">${shipped.length}</div><div class="lbl">Shipped (this window)</div></div>
+      <div class="vel-m"><div class="val">${prevShipped}</div><div class="lbl">Shipped (prev window)</div></div>
+      <div class="vel-m"><div class="val" style="color:${velColor}">${velTxt}</div><div class="lbl">Velocity change</div></div>
+      <div class="vel-m"><div class="val">${windowDays}d</div><div class="lbl">Window length</div></div>
+    </div>
+    <div class="sec-hdr">Status Transitions — features that changed state</div>
+    <div class="mat-wrap"><table class="mat">
+      <thead>${matHdr}</thead>
+      <tbody>${matBody}</tbody>
+    </table></div>
+    <div style="font-size:10px;color:#2a2a2a;margin-top:8px">Rows = from-state, columns = to-state. Blank diagonal = no change.</div>
+  </div>`;
+
+  // ── Active risks
+  const riskRows2 = activeRisks.map(r=>`<tr>
+    <td style="color:#444;font-size:10px">${r.risk_id}</td>
+    <td style="color:#fff;font-weight:700">${r.title}</td>
+    <td><span class="${sevCls(r.severity)}">${r.severity}</span></td>
+    <td style="font-size:10px;font-weight:700;text-transform:uppercase;${r.status==='open'?'color:#FF6319':'color:#4ade80'}">${r.status}</td>
+    <td style="font-size:10px;color:#555">${r.raised_date}</td>
+  </tr>`).join('');
+
+  const riskSection = `<div class="card">
+    <div class="card-title">Active Risks (${activeRisks.length})</div>
+    <div class="tscroll"><table class="tbl">
+      <thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Raised</th></tr></thead>
+      <tbody>${riskRows2||'<tr><td colspan="5" class="empty">No active risks in this window.</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+
+  document.getElementById('compare-content').innerHTML = `
+    <div class="page-heading">
+      <div class="page-title">Period Comparison</div>
+      <div class="page-subtitle"><strong style="color:#fff">${fmtDate(fromDate)}</strong> → <strong style="color:#fff">${fmtDate(toDate)}</strong> &nbsp;—&nbsp; ${windowDays}-day window</div>
+    </div>
+    ${statBoxes}${byGrpSection}${engSection}${versSection}${velSection}${riskSection}
+  `;
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function showPage(page) {
+  ['home','snapshot','compare'].forEach(p=>{
+    document.getElementById('page-'+p).style.display = p===page?'':'none';
+  });
+  document.querySelectorAll('.nav-link[data-page]').forEach(el=>{
+    el.classList.toggle('active', el.dataset.page===page);
+  });
+  window.scrollTo(0,0);
+  history.replaceState(null,'','#'+page);
+}
+
+function goSnapshot() {
+  const d = document.getElementById('snap-date').value;
+  document.getElementById('snap-date2').value = d;
+  showPage('snapshot');
+  renderSnapshot(d);
+}
+
+function runSnapshot() {
+  const d = document.getElementById('snap-date2').value;
+  document.getElementById('snap-date').value = d;
+  renderSnapshot(d);
+}
+
+function goCompare() {
+  const from = document.getElementById('cmp-from').value;
+  const to   = document.getElementById('cmp-to').value;
+  document.getElementById('cmp-from2').value = from;
+  document.getElementById('cmp-to2').value   = to;
+  showPage('compare');
+  renderCompare(from, to);
+}
+
+function runCompare() {
+  const from = document.getElementById('cmp-from2').value;
+  const to   = document.getElementById('cmp-to2').value;
+  document.getElementById('cmp-from').value = from;
+  document.getElementById('cmp-to').value   = to;
+  renderCompare(from, to);
+}
+
+// ─── HOME STATS ───────────────────────────────────────────────────────────────
+function renderHomeStats() {
+  const openRisks = DATA.risks.filter(r=>r.status==='open').length;
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat-box"><div class="stat-val">${DATA.releases.length}</div><div class="stat-lbl">Software Versions</div></div>
+    <div class="stat-box"><div class="stat-val">${DATA.features.length.toLocaleString()}</div><div class="stat-lbl">Features Tracked</div></div>
+    <div class="stat-box"><div class="stat-val">${DATA.engineers.length}</div><div class="stat-lbl">Engineers</div></div>
+    <div class="stat-box"><div class="stat-val">${openRisks}</div><div class="stat-lbl">Open Risks</div></div>
+  `;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(async function init() {
+  try {
+    const res = await fetch('/data.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    DATA = await res.json();
+
+    for (const g of DATA.groups)    GROUP_MAP[g.group_id]    = g;
+    for (const s of DATA.subgroups) SUB_MAP[s.subgroup_id]   = s;
+    for (const e of DATA.engineers) ENG_MAP[e.engineer_id]   = e;
+
+    const todayISO  = isoDate(todayDate());
+    const ago90ISO  = isoDate(daysAgo(90));
+
+    document.getElementById('snap-date').value  = todayISO;
+    document.getElementById('snap-date2').value = todayISO;
+    document.getElementById('cmp-from').value   = ago90ISO;
+    document.getElementById('cmp-from2').value  = ago90ISO;
+    document.getElementById('cmp-to').value     = todayISO;
+    document.getElementById('cmp-to2').value    = todayISO;
+
+    renderHomeStats();
+
+    const hash = window.location.hash.replace('#','');
+    if (hash === 'snapshot') { showPage('snapshot'); renderSnapshot(todayISO); }
+    else if (hash === 'compare') { showPage('compare'); renderCompare(ago90ISO, todayISO); }
+    else { showPage('home'); }
+
+    window.addEventListener('hashchange', ()=>{
+      const h = window.location.hash.replace('#','');
+      const snapDate = document.getElementById('snap-date2').value;
+      const cFrom    = document.getElementById('cmp-from2').value;
+      const cTo      = document.getElementById('cmp-to2').value;
+      if (h==='snapshot') { showPage('snapshot'); if(!document.getElementById('snapshot-content').children.length) renderSnapshot(snapDate); }
+      else if (h==='compare') { showPage('compare'); if(!document.getElementById('compare-content').children.length) renderCompare(cFrom,cTo); }
+      else showPage('home');
+    });
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = '';
+  } catch(err) {
+    document.getElementById('loading').innerHTML = `
+      <div style="color:#EE352E;font-size:14px;font-weight:700">Failed to load data</div>
+      <div style="color:#555;font-size:12px;margin-top:8px">${err.message}</div>
+      <div style="color:#2a2a2a;font-size:11px;margin-top:4px">Ensure /data.json is accessible from this origin</div>
+    `;
+  }
+})();
+</script>
 </body>
 </html>
