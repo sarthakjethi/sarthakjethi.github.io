@@ -5,1061 +5,1311 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TPM Dashboard</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #000;
-      color: #e0e0e0;
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-weight: 500;
-      font-size: 13px;
-      line-height: 1.5;
-      min-height: 100vh;
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
     }
+    html { scroll-behavior: smooth; }
+    body { background: #000; color: #fff; font-weight: 500; font-size: 16px; line-height: 1.6; }
 
-    a { color: inherit; text-decoration: none; }
+    /* ── NAV ── */
+    .tpm-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: #000; border-bottom: 1px solid #EE352E;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; height: 56px;
+    }
+    .nav-brand { font-size: 15px; font-weight: 700; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; font-weight: 500; color: #888; text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a.active { color: #fff; }
 
-    /* ── Loading ────────────────────────────────────────── */
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── LOADING ── */
     #loading {
-      position: fixed; inset: 0; background: #000;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 14px; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      height: 60vh; flex-direction: column; gap: 16px;
     }
-    .spin {
-      width: 36px; height: 36px;
-      border: 3px solid #1a1a1a; border-top-color: #EE352E;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid #222;
+      border-top-color: #EE352E; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .load-txt { color: #444; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 
-    /* ── Nav ────────────────────────────────────────────── */
-    #nav {
-      position: sticky; top: 0; z-index: 100;
-      background: #000;
-      border-bottom: 2px solid #EE352E;
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 0 28px; height: 44px;
-    }
-    .nav-brand {
-      color: #fff; font-size: 13px; font-weight: 700;
-      letter-spacing: .04em; cursor: pointer;
-    }
-    .nav-brand:hover { color: #EE352E; }
-    .nav-links { display: flex; gap: 22px; align-items: center; }
-    .nav-link {
-      color: #666; font-size: 11px; font-weight: 700;
-      letter-spacing: .1em; text-transform: uppercase;
-      cursor: pointer; transition: color .15s;
-      border: none; background: none; padding: 0;
-      font-family: inherit;
-    }
-    .nav-link:hover { color: #fff; }
-    .nav-link.active { color: #fff; }
+    /* ── SHARED ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
 
-    /* ── Page layout ────────────────────────────────────── */
-    .page { max-width: 1200px; margin: 0 auto; padding: 36px 24px 64px; }
-
-    .page-heading { margin-bottom: 28px; }
-    .page-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-    .page-subtitle { font-size: 12px; color: #555; }
-
-    /* ── Stat grid ──────────────────────────────────────── */
-    .stat-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 14px; margin-bottom: 28px;
-    }
+    /* stat boxes */
+    .stat-row { display: flex; gap: 16px; flex-wrap: wrap; }
     .stat-box {
-      background: #0a0a0a; border: 1px solid #1e1e1e;
-      padding: 20px; border-radius: 2px;
+      background: #111; border-radius: 18px; padding: 28px 32px;
+      flex: 1; min-width: 140px;
+      transition: transform 0.2s ease;
     }
-    .stat-val {
-      font-size: 38px; font-weight: 700; color: #fff;
-      line-height: 1; font-variant-numeric: tabular-nums;
-    }
-    .stat-lbl {
-      font-size: 10px; color: #555;
-      letter-spacing: .12em; text-transform: uppercase; margin-top: 8px;
+    .stat-box:hover { transform: translateY(-3px); }
+    .stat-num { font-size: 40px; font-weight: 700; line-height: 1; }
+    .stat-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #888; margin-top: 8px;
     }
 
-    /* ── Cards ──────────────────────────────────────────── */
+    /* card */
     .card {
-      background: #0a0a0a; border: 1px solid #1e1e1e;
-      border-radius: 2px; padding: 20px; margin-bottom: 18px;
+      background: #111; border-radius: 18px; padding: 32px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .card-title {
-      font-size: 10px; font-weight: 700;
-      letter-spacing: .16em; text-transform: uppercase;
-      color: #EE352E; margin-bottom: 18px;
-    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
 
-    /* ── Section sub-header ─────────────────────────────── */
-    .sec-hdr {
-      font-size: 10px; font-weight: 700;
-      letter-spacing: .14em; text-transform: uppercase;
-      color: #444; margin: 20px 0 10px;
+    /* tabs */
+    .tab-bar {
+      display: flex; gap: 0; border-bottom: 1px solid #222; margin-bottom: 32px;
+      flex-wrap: wrap;
     }
-    .sec-hdr:first-child { margin-top: 0; }
+    .tab-btn {
+      background: none; border: none; color: #888; cursor: pointer;
+      font-size: 14px; font-weight: 500; padding: 12px 20px;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: #fff; border-bottom-color: #EE352E; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* ── Status badges ──────────────────────────────────── */
+    /* status badges */
     .badge {
-      display: inline-block; padding: 2px 7px; border-radius: 2px;
-      font-size: 9px; font-weight: 700; letter-spacing: .05em;
-      text-transform: uppercase; white-space: nowrap; line-height: 1.6;
+      display: inline-block; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 100px;
     }
-    .b-released { background: #00933C; color: #fff; }
-    .b-rc       { background: #0039A6; color: #fff; }
-    .b-fc       { background: #0039A6; color: #ddeeff; }
-    .b-dev      { background: #FF6319; color: #fff; }
-    .b-planned  { background: #222; color: #777; }
+    .badge-released { background: #00933C22; color: #00933C; }
+    .badge-rc { background: #0039A622; color: #4d8bff; }
+    .badge-fc { background: #FF631922; color: #FF6319; }
+    .badge-dev { background: #FF631922; color: #FF6319; }
+    .badge-planned { background: #44444422; color: #888; }
+    .badge-critical { background: #EE352E33; color: #EE352E; }
+    .badge-high { background: #FF631933; color: #FF6319; }
+    .badge-medium { background: #FCCC0A33; color: #FCCC0A; }
+    .badge-low { background: #44444433; color: #888; }
+    .badge-open { background: #EE352E22; color: #EE352E; }
+    .badge-resolved { background: #00933C22; color: #00933C; }
 
-    /* ── Status text colours ────────────────────────────── */
-    .t-released { color: #4ade80; }
-    .t-rc       { color: #60a5fa; }
-    .t-fc       { color: #fbbf24; }
-    .t-dev      { color: #FF6319; }
-    .t-planned  { color: #555; }
-
-    /* ── Tables ─────────────────────────────────────────── */
-    .tscroll { overflow-x: auto; }
-    table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-    table.tbl th {
-      text-align: left; padding: 7px 12px;
-      font-size: 9px; font-weight: 700;
-      letter-spacing: .12em; text-transform: uppercase;
-      color: #444; border-bottom: 1px solid #1e1e1e; white-space: nowrap;
+    /* subway dot */
+    .dot {
+      display: inline-block; border-radius: 50%; flex-shrink: 0;
+      vertical-align: middle;
     }
-    table.tbl td {
-      padding: 8px 12px; border-bottom: 1px solid #111;
-      color: #aaa; vertical-align: middle;
+    .dot-released { background: #00933C; }
+    .dot-rc { background: #0039A6; }
+    .dot-fc { background: #FF6319; }
+    .dot-dev { background: #FF6319; }
+    .dot-planned { background: #444; }
+    .dot-sm { width: 10px; height: 10px; }
+    .dot-md { width: 14px; height: 14px; }
+    .dot-lg { width: 20px; height: 20px; }
+
+    /* tables */
+    .data-table {
+      width: 100%; border-collapse: collapse; font-size: 14px;
     }
-    table.tbl tr:last-child td { border-bottom: none; }
-    table.tbl tbody tr:hover td { background: #0f0f0f; }
-    .th-r, .td-r { text-align: right; }
-    .th-c, .td-c { text-align: center; }
-    .tbl .row-group td {
-      background: #111; color: #fff;
-      font-weight: 700; font-size: 11px;
+    .data-table th {
+      text-align: left; padding: 10px 14px; color: #888;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; border-bottom: 1px solid #222;
     }
-    .tbl .row-sub td { padding-left: 28px; }
-    .mono { font-variant-numeric: tabular-nums; }
-    .nowrap { white-space: nowrap; }
-
-    /* ── Program status strip ───────────────────────────── */
-    .status-counts {
-      display: flex; border: 1px solid #1e1e1e;
-      border-radius: 2px; overflow: hidden; margin-bottom: 18px;
+    .data-table td { padding: 10px 14px; border-bottom: 1px solid #0d0d0d; }
+    .data-table tr:hover td { background: #0a0a0a; }
+    .data-table tr.row-group { background: #111; cursor: pointer; }
+    .data-table tr.row-group td { font-weight: 700; }
+    .data-table tr.row-subgroup { background: #0d0d0d; cursor: pointer; }
+    .data-table tr.row-subgroup td:first-child { padding-left: 32px; }
+    .data-table tr.row-feature td:first-child { padding-left: 56px; }
+    .data-table tr.row-feature td { color: #ccc; }
+    .expand-icon {
+      margin-right: 8px; font-size: 11px; color: #555;
+      transition: transform 0.15s; display: inline-block; width: 12px;
     }
-    .sc-item {
-      flex: 1; padding: 14px 16px;
-      border-right: 1px solid #1e1e1e; text-align: center;
+    .row-expanded .expand-icon { transform: rotate(90deg); }
+
+    /* progress bar */
+    .prog-track { background: #222; border-radius: 4px; height: 6px; flex: 1; }
+    .prog-fill { height: 6px; border-radius: 4px; background: #00933C; }
+
+    /* inputs */
+    input[type="text"] {
+      background: #111; border: 1px solid #333; border-radius: 10px;
+      color: #fff; font-size: 14px; padding: 10px 14px;
+      font-family: "Helvetica Neue", Helvetica, sans-serif;
+      outline: none; transition: border-color 0.15s;
     }
-    .sc-item:last-child { border-right: none; }
-    .sc-val { font-size: 28px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-    .sc-lbl { font-size: 9px; color: #555; letter-spacing: .1em; text-transform: uppercase; margin-top: 5px; }
+    input[type="text"]:focus { border-color: #555; }
+    input[type="text"]::placeholder { color: #555; }
 
-    /* ── Velocity metrics ───────────────────────────────── */
-    .vel-metrics { display: flex; gap: 32px; flex-wrap: wrap; }
-    .vel-m .val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #fff; }
-    .vel-m .lbl { font-size: 9px; color: #555; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
-
-    /* ── Velocity bar chart ─────────────────────────────── */
-    .vel-chart { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin: 16px 0 4px; }
-    .vcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; }
-    .vbar { width: 100%; background: #EE352E; border-radius: 1px 1px 0 0; min-height: 0; }
-    .vlbl { font-size: 8px; color: #444; white-space: nowrap; letter-spacing: .03em; }
-    .vval { font-size: 9px; color: #666; height: 12px; }
-
-    /* ── Hardware gap ───────────────────────────────────── */
-    .hw-row { margin-bottom: 12px; }
-    .hw-hdr { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin-bottom: 5px; }
-    .hw-pct { color: #EE352E; font-weight: 700; }
-    .hw-track { height: 6px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
-    .hw-fill  { height: 100%; background: #EE352E; border-radius: 2px; }
-
-    /* ── Engineer cards ─────────────────────────────────── */
-    .eng-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 12px; margin-bottom: 20px;
-    }
-    .eng-card { background: #111; border: 1px solid #1e1e1e; padding: 14px; border-radius: 2px; }
-    .eng-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
-    .eng-team { font-size: 9px; color: #EE352E; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
-    .eng-spec { font-size: 10px; color: #555; line-height: 1.4; margin-bottom: 10px; min-height: 28px; }
-    .eng-stats { display: flex; gap: 14px; }
-    .eng-stat .v { font-size: 20px; font-weight: 700; color: #fff; line-height: 1; }
-    .eng-stat .l { font-size: 8px; color: #444; text-transform: uppercase; letter-spacing: .1em; margin-top: 2px; }
-
-    /* ── Seniority pill ─────────────────────────────────── */
-    .seniority {
-      display: inline-block; padding: 1px 6px; border-radius: 2px;
-      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
-    }
-    .sen-senior { background: #003320; color: #4ade80; }
-    .sen-mid    { background: #1a1400; color: #fbbf24; }
-    .sen-junior { background: #1a0a00; color: #FF6319; }
-
-    /* ── Risk severity ──────────────────────────────────── */
-    .sev { font-weight: 700; }
-    .sev-critical { color: #EE352E; }
-    .sev-high     { color: #FF6319; }
-    .sev-medium   { color: #fbbf24; }
-    .sev-low      { color: #4ade80; }
-
-    /* ── Inputs & buttons ───────────────────────────────── */
-    .input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-    .input-row label { font-size: 10px; color: #555; letter-spacing: .1em; text-transform: uppercase; min-width: 30px; }
-    input[type="date"] {
-      background: #111; border: 1px solid #2a2a2a; color: #fff;
-      padding: 7px 12px; font-family: inherit; font-size: 12px;
-      font-weight: 500; border-radius: 2px; outline: none;
-    }
-    input[type="date"]:focus { border-color: #EE352E; }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); }
     .btn {
-      background: #EE352E; color: #fff; border: none;
-      padding: 7px 18px; font-family: inherit; font-size: 11px;
-      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-      cursor: pointer; border-radius: 2px; transition: background .15s;
+      background: #fff; color: #000; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; padding: 10px 20px;
+      cursor: pointer; font-family: "Helvetica Neue", Helvetica, sans-serif;
+      transition: opacity 0.15s; white-space: nowrap;
     }
-    .btn:hover { background: #c02b25; }
+    .btn:hover { opacity: 0.85; }
     .btn-ghost {
-      background: transparent; color: #555;
-      border: 1px solid #222;
+      background: #111; color: #fff; border: 1px solid #333;
     }
-    .btn-ghost:hover { background: #111; color: #fff; border-color: #444; }
+    .btn-ghost:hover { border-color: #555; opacity: 1; }
 
-    /* ── Home cards ─────────────────────────────────────── */
-    .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
-    .home-card { background: #0a0a0a; border: 1px solid #1e1e1e; padding: 22px; border-radius: 2px; }
-    .home-card-title {
-      font-size: 10px; font-weight: 700; letter-spacing: .16em;
-      text-transform: uppercase; color: #EE352E; margin-bottom: 10px;
+    /* ── HOME PAGE ── */
+    .home-hero { padding: 80px 0 60px; text-align: center; }
+    .home-hero h1 {
+      font-size: clamp(48px, 8vw, 96px); font-weight: 700;
+      line-height: 1; margin-bottom: 20px;
     }
-    .home-card-desc { font-size: 11px; color: #555; margin-bottom: 16px; line-height: 1.5; }
+    .home-hero .subtitle { font-size: 18px; color: #888; margin-bottom: 48px; }
+    .subway-line {
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 56px;
+    }
+    .subway-stop { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .subway-stop-dot { width: 24px; height: 24px; border-radius: 50%; }
+    .subway-stop-label { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; }
+    .subway-connector { height: 3px; width: 60px; background: #222; margin-bottom: 24px; }
+    .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+    .home-card-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .home-card-desc { font-size: 15px; color: #888; margin-bottom: 24px; line-height: 1.7; }
+    .input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .hint { font-size: 13px; color: #555; margin-top: 40px; text-align: center; padding-bottom: 60px; }
 
-    /* ── Inline progress bar ────────────────────────────── */
-    .prog { display: inline-block; width: 60px; height: 3px; background: #222; border-radius: 2px; overflow: hidden; vertical-align: middle; }
-    .prog-fill { height: 100%; background: #00933C; border-radius: 2px; }
+    /* ── SNAPSHOT PAGE ── */
+    .snap-header { padding: 40px 0 0; }
+    .snap-header h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+    .snap-date-row { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
 
-    /* ── Status transition matrix ───────────────────────── */
-    .mat-wrap { overflow-x: auto; }
-    table.mat { border-collapse: collapse; font-size: 11px; }
-    table.mat th { padding: 6px 10px; color: #444; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border: 1px solid #1a1a1a; font-weight: 700; white-space: nowrap; background: #0a0a0a; }
-    table.mat td { padding: 6px 10px; color: #333; border: 1px solid #1a1a1a; text-align: center; }
-    table.mat td.nz { color: #ddd; font-weight: 700; }
+    /* overview boxes */
+    .status-boxes { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+    .status-box {
+      background: #111; border-radius: 18px; padding: 24px 28px;
+      flex: 1; min-width: 120px;
+    }
+    .status-box-num { font-size: 36px; font-weight: 700; line-height: 1; }
+    .status-box-dot-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .status-box-label { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.06em; }
+    .velocity-boxes { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+    .vel-box {
+      background: #0d0d0d; border-radius: 14px; padding: 20px 24px;
+      flex: 1; min-width: 120px;
+    }
+    .vel-box-num { font-size: 28px; font-weight: 700; }
+    .vel-box-label { font-size: 12px; color: #888; margin-top: 4px; }
+    .health-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+    .health-item {
+      background: #111; border-radius: 14px; padding: 20px 24px;
+      flex: 1; min-width: 160px; display: flex; gap: 12px; align-items: flex-start;
+    }
+    .health-text-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .health-text-val { font-size: 13px; color: #888; }
 
-    /* ── Misc ───────────────────────────────────────────── */
-    hr.div { border: none; border-top: 1px solid #111; margin: 18px 0; }
-    .empty { color: #333; font-size: 12px; padding: 20px 12px; }
+    /* roadmap */
+    .roadmap-split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+    .table-section-title { font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
 
-    /* ── Responsive ─────────────────────────────────────── */
-    @media (max-width: 900px) {
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    /* org chart */
+    .org-tpm { display: flex; flex-direction: column; align-items: center; }
+    .org-tpm-node {
+      background: #EE352E; color: #fff; border-radius: 12px;
+      padding: 10px 24px; font-weight: 700; font-size: 14px; margin-bottom: 20px;
+    }
+    .org-teams { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .org-team { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .org-team-node {
+      border-radius: 10px; padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s; text-align: center;
+    }
+    .org-engineers { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .org-eng-card {
+      background: #111; border-radius: 10px; padding: 10px 14px;
+      font-size: 12px; cursor: pointer; text-align: center;
+      transition: transform 0.15s, background 0.15s; min-width: 86px;
+    }
+    .org-eng-card:hover { transform: translateY(-2px); background: #1a1a1a; }
+    .org-eng-card.eng-selected { background: #222; outline: 1px solid #555; }
+    .org-eng-name { font-weight: 700; margin-bottom: 2px; }
+    .org-eng-level { font-size: 11px; color: #888; }
+    .eng-panel {
+      background: #111; border-radius: 14px; padding: 24px;
+      margin-top: 24px; display: none;
+    }
+    .eng-panel.open { display: block; }
+    .eng-panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .eng-panel-name { font-size: 20px; font-weight: 700; }
+    .eng-panel-meta { font-size: 13px; color: #888; margin-top: 4px; }
+    .eng-panel-close { background: none; border: none; color: #555; font-size: 22px; cursor: pointer; line-height: 1; }
+    .eng-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .eng-stat { background: #0d0d0d; border-radius: 10px; padding: 14px 18px; }
+    .eng-stat-num { font-size: 24px; font-weight: 700; }
+    .eng-stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+
+    /* heatmap */
+    .heatmap { display: grid; grid-template-columns: 80px 1fr 1fr 1fr; gap: 8px; margin-bottom: 32px; }
+    .heatmap-label { display: flex; align-items: center; justify-content: flex-end; font-size: 11px; color: #888; padding-right: 8px; font-weight: 600; text-align: right; line-height: 1.3; }
+    .heatmap-col-header { text-align: center; font-size: 11px; color: #888; font-weight: 600; padding-bottom: 4px; }
+    .heatmap-cell {
+      background: #0d0d0d; border-radius: 10px; padding: 12px;
+      min-height: 64px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+    }
+    .heatmap-cell.heat-critical { background: #EE352E18; }
+    .heatmap-cell.heat-high { background: #FF631918; }
+    .heatmap-cell.heat-medium { background: #FCCC0A18; }
+    .risk-chip { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; cursor: default; }
+
+    /* bar chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; margin-bottom: 8px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; position: relative; }
+    .bar-fill { background: #00933C; border-radius: 4px 4px 0 0; width: 100%; min-height: 2px; }
+    .bar-fill:hover { opacity: 0.8; }
+    .bar-val { font-size: 10px; color: #888; margin-bottom: 3px; }
+    .bar-labels-row { display: flex; gap: 6px; margin-bottom: 28px; }
+    .bar-label { flex: 1; text-align: center; font-size: 10px; color: #555; }
+
+    /* hbar */
+    .hbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .hbar-label { font-size: 13px; width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+    .hbar-track { flex: 1; background: #0d0d0d; border-radius: 4px; height: 12px; }
+    .hbar-fill { height: 12px; border-radius: 4px; }
+    .hbar-count { font-size: 13px; color: #888; width: 40px; text-align: right; flex-shrink: 0; }
+
+    /* compare */
+    .compare-header { padding: 40px 0 0; }
+    .compare-header h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
+    .compare-input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
+    .compare-sep { color: #555; font-size: 14px; }
+    .vel-badge { display: inline-block; border-radius: 100px; padding: 4px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+    .badge-faster { background: #00933C22; color: #00933C; }
+    .badge-slower { background: #EE352E22; color: #EE352E; }
+    .ver-chip { display: inline-block; background: #111; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-family: monospace; margin: 3px; color: #ccc; }
+
+    /* misc */
+    .sec-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .sec-title-sm { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+    .divider { border: none; border-top: 1px solid #111; margin: 32px 0; }
+    .table-scroll { overflow-x: auto; }
+    .muted { color: #888; }
+
+    @media (max-width: 700px) {
+      .tpm-nav { padding: 0 20px; }
+      .container { padding: 0 20px; }
       .home-cards { grid-template-columns: 1fr; }
-      .status-counts { flex-wrap: wrap; }
-      .sc-item { min-width: 90px; }
-    }
-    @media (max-width: 600px) {
-      .page { padding: 20px 14px 48px; }
-      .eng-grid { grid-template-columns: repeat(2, 1fr); }
-      #nav { padding: 0 16px; }
-      .nav-links { gap: 14px; }
+      .roadmap-split { grid-template-columns: 1fr; }
+      .heatmap { grid-template-columns: 60px 1fr 1fr 1fr; }
+      .hbar-label { width: 100px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Loading ────────────────────────────────────────────── -->
+<!-- NAV -->
+<nav class="tpm-nav">
+  <a href="#home" class="nav-brand" onclick="navigate('home');return false;">
+    <span style="color:#EE352E">●</span> TPM Dashboard
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="#snapshot" id="nav-snapshot" onclick="navigate('snapshot');return false;">Snapshot</a>
+    <a href="#compare" id="nav-compare" onclick="navigate('compare');return false;">Compare</a>
+  </div>
+</nav>
+
+<!-- LOADING -->
 <div id="loading">
-  <div class="spin"></div>
-  <div class="load-txt">Loading dashboard data…</div>
+  <div class="spinner"></div>
+  <span class="muted" style="font-size:14px">Loading data…</span>
 </div>
 
-<!-- ── App ────────────────────────────────────────────────── -->
-<div id="app" style="display:none">
-
-  <nav id="nav">
-    <span class="nav-brand" onclick="showPage('home')">● TPM Dashboard</span>
-    <div class="nav-links">
-      <a class="nav-link" href="/">Home</a>
-      <button class="nav-link" data-page="home"     onclick="showPage('home')">Dashboard</button>
-      <button class="nav-link" data-page="snapshot" onclick="goSnapshot()">Snapshot</button>
-      <button class="nav-link" data-page="compare"  onclick="goCompare()">Compare</button>
+<!-- ═══════════════════════ HOME ═══════════════════════ -->
+<div id="page-home" class="page">
+  <div class="container">
+    <div class="home-hero">
+      <h1>TPM Dashboard</h1>
+      <p class="subtitle">Tesla Vehicle Software Update Intelligence · 2023–2026</p>
+      <div class="subway-line">
+        <div class="subway-stop">
+          <div class="subway-stop-dot" style="background:#0039A6"></div>
+          <div class="subway-stop-label">Snapshot</div>
+        </div>
+        <div class="subway-connector"></div>
+        <div class="subway-stop">
+          <div class="subway-stop-dot" style="background:#EE352E"></div>
+          <div class="subway-stop-label">Compare</div>
+        </div>
+        <div class="subway-connector"></div>
+        <div class="subway-stop">
+          <div class="subway-stop-dot" style="background:#00933C"></div>
+          <div class="subway-stop-label">Health</div>
+        </div>
+      </div>
+      <div class="stat-row" id="home-stats"></div>
     </div>
-  </nav>
-
-  <!-- ── HOME ─────────────────────────────────────────── -->
-  <div id="page-home" class="page">
-    <div class="page-heading">
-      <div class="page-title">TPM Dashboard</div>
-      <div class="page-subtitle">Tesla Software Program Tracker — select a date to explore program state</div>
-    </div>
-    <div class="stat-grid" id="home-stats"></div>
     <div class="home-cards">
-      <div class="home-card">
-        <div class="home-card-title">Program Snapshot</div>
-        <div class="home-card-desc">View feature lifecycle, release roadmap, team activity, and risk register at any point in time.</div>
+      <div class="card">
+        <div class="home-card-title">Snapshot View</div>
+        <div class="home-card-desc">Step into the role of a TPM on any given date. See which versions were released, which features were in flight, team workload, and active risks — as of that moment.</div>
         <div class="input-row">
-          <label>Date</label>
-          <input type="date" id="snap-date">
+          <input type="text" id="home-snap-date" placeholder="e.g. 2024-09-01 or 2024.26" style="flex:1;min-width:160px">
           <button class="btn" onclick="goSnapshot()">View Snapshot</button>
         </div>
       </div>
-      <div class="home-card">
-        <div class="home-card-title">Period Comparison</div>
-        <div class="home-card-desc">Compare feature throughput, engineer productivity, and velocity across two dates.</div>
+      <div class="card">
+        <div class="home-card-title">Compare Window</div>
+        <div class="home-card-desc">Pick a start and end to measure progress. How many features shipped? Which engineers delivered? How did velocity change versus the overall average?</div>
         <div class="input-row">
-          <label>From</label>
-          <input type="date" id="cmp-from">
-        </div>
-        <div class="input-row">
-          <label>To</label>
-          <input type="date" id="cmp-to">
+          <input type="text" id="home-from" placeholder="From: 2024-01-01" style="flex:1;min-width:100px">
+          <span class="compare-sep">→</span>
+          <input type="text" id="home-to" placeholder="To: 2024-09-01" style="flex:1;min-width:100px">
           <button class="btn" onclick="goCompare()">Compare</button>
         </div>
       </div>
     </div>
+    <p class="hint">Version strings (2024.26) resolve to that release date · Date strings (2024-07-01) use calendar dates · Leave blank to view the full dataset</p>
   </div>
+</div>
 
-  <!-- ── SNAPSHOT ──────────────────────────────────────── -->
-  <div id="page-snapshot" class="page" style="display:none">
-    <div class="input-row" style="margin-bottom:24px">
-      <label>Date</label>
-      <input type="date" id="snap-date2">
-      <button class="btn" onclick="runSnapshot()">Refresh</button>
-      <button class="btn btn-ghost" onclick="showPage('home')">← Home</button>
+<!-- ═══════════════════════ SNAPSHOT ═══════════════════════ -->
+<div id="page-snapshot" class="page">
+  <div class="container">
+    <div class="snap-header">
+      <h2>Program Snapshot</h2>
+      <div class="snap-date-row">
+        <input type="text" id="snap-date-input" placeholder="Date or version (e.g. 2024-09-01)" style="width:240px">
+        <button class="btn btn-ghost" onclick="applySnapshot()">Update</button>
+        <span id="snap-date-display" class="muted" style="font-size:13px"></span>
+      </div>
+      <div class="tab-bar" id="snap-tab-bar">
+        <button class="tab-btn active" onclick="switchTab('snap','overview',this)">Overview</button>
+        <button class="tab-btn" onclick="switchTab('snap','roadmap',this)">Roadmap</button>
+        <button class="tab-btn" onclick="switchTab('snap','features',this)">Features</button>
+        <button class="tab-btn" onclick="switchTab('snap','team',this)">Team</button>
+        <button class="tab-btn" onclick="switchTab('snap','risks',this)">Risks</button>
+        <button class="tab-btn" onclick="switchTab('snap','velocity',this)">Velocity</button>
+      </div>
     </div>
-    <div id="snapshot-content"></div>
-  </div>
 
-  <!-- ── COMPARE ───────────────────────────────────────── -->
-  <div id="page-compare" class="page" style="display:none">
-    <div class="input-row" style="margin-bottom:24px;flex-wrap:wrap">
-      <label>From</label>
-      <input type="date" id="cmp-from2">
-      <label>To</label>
-      <input type="date" id="cmp-to2">
-      <button class="btn" onclick="runCompare()">Refresh</button>
-      <button class="btn btn-ghost" onclick="showPage('home')">← Home</button>
+    <!-- Overview -->
+    <div id="snap-tab-overview" class="tab-panel active">
+      <div class="status-boxes" id="snap-status-boxes"></div>
+      <div class="velocity-boxes" id="snap-vel-boxes"></div>
+      <div class="sec-title-sm">Program Health</div>
+      <div class="health-row" id="snap-health"></div>
     </div>
-    <div id="compare-content"></div>
-  </div>
 
-</div><!-- /#app -->
+    <!-- Roadmap -->
+    <div id="snap-tab-roadmap" class="tab-panel">
+      <div class="sec-title">In Flight</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD</th><th style="min-width:160px">Progress</th></tr></thead>
+          <tbody id="roadmap-inflight-body"></tbody>
+        </table>
+      </div>
+      <div class="roadmap-split">
+        <div>
+          <div class="table-section-title" style="margin-top:28px">Recently Released</div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Version</th><th>Date</th><th>Features</th><th>FSD</th></tr></thead>
+              <tbody id="roadmap-recent-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="table-section-title" style="margin-top:28px">Upcoming</div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Version</th><th>Date</th><th>Features</th><th>FSD</th></tr></thead>
+              <tbody id="roadmap-upcoming-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div id="snap-tab-features" class="tab-panel">
+      <div class="table-scroll">
+        <table class="data-table" id="features-table">
+          <thead><tr>
+            <th>Feature / Group</th>
+            <th>Status</th><th>Engineer</th><th>Dev Start</th><th>Release</th>
+            <th>Planned</th><th>Dev</th><th>FC</th><th>RC</th><th>Released</th>
+          </tr></thead>
+          <tbody id="features-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div id="snap-tab-team" class="tab-panel">
+      <div id="org-chart" style="margin-bottom:32px"></div>
+      <div id="eng-detail-panel" class="eng-panel"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">Full Roster</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Team</th><th>Level</th><th>Specialty</th><th>Active</th><th>Released</th></tr></thead>
+          <tbody id="team-roster-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Risks -->
+    <div id="snap-tab-risks" class="tab-panel">
+      <div class="sec-title">Risk Heatmap</div>
+      <div style="font-size:12px;color:#555;margin-bottom:12px">Rows: Probability (High → Low) · Columns: Impact (Low → High)</div>
+      <div class="heatmap" id="risk-heatmap"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">Risk Register</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Prob</th><th>Impact</th><th>Owner</th><th>Status</th></tr></thead>
+          <tbody id="risk-body"></tbody>
+        </table>
+      </div>
+      <hr class="divider">
+      <div class="sec-title-sm">Features Stuck in Dev (&gt;60 days)</div>
+      <div id="stuck-features"></div>
+    </div>
+
+    <!-- Velocity -->
+    <div id="snap-tab-velocity" class="tab-panel">
+      <div class="sec-title">Features Released per Month</div>
+      <div class="bar-chart" id="vel-bar-chart"></div>
+      <div class="bar-labels-row" id="vel-bar-labels"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">Top 10 Releases by Feature Count</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Version</th><th>Date</th><th>Features</th><th>Category Split</th></tr></thead>
+          <tbody id="vel-top-body"></tbody>
+        </table>
+      </div>
+      <hr class="divider">
+      <div class="sec-title-sm" style="margin-top:28px">Category Breakdown</div>
+      <div id="vel-category"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ COMPARE ═══════════════════════ -->
+<div id="page-compare" class="page">
+  <div class="container">
+    <div class="compare-header">
+      <h2>Compare Window</h2>
+      <div class="compare-input-row">
+        <input type="text" id="cmp-from" placeholder="From: 2024-01-01 or 2024.2" style="width:200px">
+        <span class="compare-sep">→</span>
+        <input type="text" id="cmp-to" placeholder="To: 2024-09-01 or 2024.26" style="width:200px">
+        <button class="btn" onclick="applyCompare()">Compare</button>
+        <span id="cmp-range-display" class="muted" style="font-size:13px"></span>
+      </div>
+      <div class="tab-bar" id="cmp-tab-bar">
+        <button class="tab-btn active" onclick="switchTab('cmp','summary',this)">Summary</button>
+        <button class="tab-btn" onclick="switchTab('cmp','features',this)">Features</button>
+        <button class="tab-btn" onclick="switchTab('cmp','engineers',this)">Engineers</button>
+        <button class="tab-btn" onclick="switchTab('cmp','risks',this)">Risks</button>
+      </div>
+    </div>
+
+    <div id="cmp-tab-summary" class="tab-panel active">
+      <div class="stat-row" id="cmp-stats" style="margin-bottom:32px"></div>
+      <div class="card" id="cmp-velocity-card" style="margin-bottom:32px"></div>
+      <div class="sec-title-sm">Versions Released in Window</div>
+      <div id="cmp-ver-chips" style="padding-bottom:40px"></div>
+    </div>
+
+    <div id="cmp-tab-features" class="tab-panel">
+      <div class="sec-title-sm">Features Shipped by Group</div>
+      <div id="cmp-group-bars" style="margin-bottom:32px;max-width:600px"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">All Features Shipped</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Feature</th><th>Group</th><th>Engineer</th><th>Release Date</th><th>Category</th></tr></thead>
+          <tbody id="cmp-feat-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="cmp-tab-engineers" class="tab-panel">
+      <div class="sec-title-sm">Features Shipped per Engineer</div>
+      <div id="cmp-eng-section" style="max-width:600px;padding-bottom:40px"></div>
+    </div>
+
+    <div id="cmp-tab-risks" class="tab-panel">
+      <div class="sec-title-sm">Active Risks During Window</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Prob</th><th>Impact</th><th>Owner</th><th>Status</th></tr></thead>
+          <tbody id="cmp-risk-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-// ─── GLOBALS ──────────────────────────────────────────────────────────────────
-let DATA = null;
-let GROUP_MAP = {}, SUB_MAP = {}, ENG_MAP = {};
+/* ══════════════════════════════════════
+   CONSTANTS & GLOBALS
+══════════════════════════════════════ */
+let D = null;
+let snapDate = null;
+let cmpFrom = null, cmpTo = null;
 
-// ─── DATE UTILITIES ───────────────────────────────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_MAP = {January:0,February:1,March:2,April:3,May:4,June:5,
+  July:6,August:7,September:8,October:9,November:10,December:11};
+
+const TEAM_COLORS = {
+  'autopilot-sw':'#EE352E','safety-sw':'#0039A6','ui-sw':'#FF6319',
+  'nav-sw':'#00933C','ai-sw':'#A65BAB','firmware':'#FCCC0A',
+  'hardware-sw':'#808183','app-sw':'#00B9F2',
+};
+const TEAM_LABELS = {
+  'autopilot-sw':'Autopilot SW','safety-sw':'Safety SW','ui-sw':'UI SW',
+  'nav-sw':'Nav SW','ai-sw':'AI SW','firmware':'Firmware',
+  'hardware-sw':'Hardware SW','app-sw':'App SW',
+};
+
+/* ══════════════════════════════════════
+   DATE UTILITIES
+══════════════════════════════════════ */
 function parseDate(s) {
   if (!s) return null;
   s = String(s).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-    const [y, m, d] = s.split('-').map(Number);
-    return new Date(y, m - 1, d);
+  // "April 10, 2023"
+  let m = s.match(/^([A-Za-z]+)\s+(\d+),\s*(\d{4})$/);
+  if (m) {
+    const mo = MONTH_MAP[m[1]];
+    if (mo !== undefined) return new Date(+m[3], mo, +m[2]);
   }
-  const t = Date.parse(s);
-  return isNaN(t) ? null : new Date(t);
+  // "2024-09-01"
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
 }
 
 function fmtDate(d) {
-  if (!d) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function isoDate(d) {
   if (!d) return '';
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
 }
 
-function todayDate() { const d = new Date(); d.setHours(0,0,0,0); return d; }
-function daysAgo(n)   { const d = todayDate(); d.setDate(d.getDate()-n); return d; }
-
-// ─── STATUS ENGINE ────────────────────────────────────────────────────────────
-function computeStatus(f, date) {
-  const rc = parseDate(f.release_complete_date);
-  const fc = parseDate(f.feature_complete_date);
-  const ds = parseDate(f.dev_start_date);
-  if (rc) {
-    if (date >= new Date(rc.getTime() + 14*86400000)) return 'released';
-    if (date >= rc) return 'release_complete';
+function resolveInput(s) {
+  s = (s || '').trim();
+  if (!s) return null;
+  if (/^\d{4}\.\d/.test(s)) {
+    const rel = D && D.releases.find(r => r.version === s);
+    if (rel) return parseDate(rel.release_date);
+    return null;
   }
-  if (fc && date >= fc) return 'feature_complete';
-  if (ds && date >= ds) return 'in_development';
+  return parseDate(s);
+}
+
+/* ══════════════════════════════════════
+   STATUS COMPUTATION
+══════════════════════════════════════ */
+function computeStatus(f, asOf) {
+  const rc  = parseDate(f.release_complete_date);
+  const fc  = parseDate(f.feature_complete_date);
+  const ds  = parseDate(f.dev_start_date);
+  const rel = parseDate(f.release_date);
+
+  if (!asOf) {
+    return f.lifecycle_status === 'released' ? 'released'
+         : f.lifecycle_status === 'release_complete' ? 'rc'
+         : 'planned';
+  }
+  // released: release_date <= asOf OR (rc + 14d) <= asOf
+  if (rel && rel <= asOf) return 'released';
+  if (rc) {
+    const thresh = new Date(rc.getTime() + 14*86400000);
+    if (thresh <= asOf) return 'released';
+    if (rc <= asOf) return 'rc';
+  }
+  if (fc && fc <= asOf) return 'fc';
+  if (ds && ds <= asOf) return 'dev';
   return 'planned';
 }
 
-const BADGE_CLS = { released:'b-released', release_complete:'b-rc', feature_complete:'b-fc', in_development:'b-dev', planned:'b-planned' };
-const BADGE_TXT = { released:'Released', release_complete:'RC', feature_complete:'FC', in_development:'In Dev', planned:'Planned' };
-const TEXT_CLS  = { released:'t-released', release_complete:'t-rc', feature_complete:'t-fc', in_development:'t-dev', planned:'t-planned' };
-const STATUS_LABEL = { released:'Released', release_complete:'Release Complete', feature_complete:'Feature Complete', in_development:'In Development', planned:'Planned' };
+/* ══════════════════════════════════════
+   RENDER HELPERS
+══════════════════════════════════════ */
+function statusBadge(s) {
+  const L = {released:'Released',rc:'RC',fc:'FC',dev:'Dev',planned:'Planned'};
+  return `<span class="badge badge-${s}">${L[s]||s}</span>`;
+}
+function dotInline(s) {
+  const c = {released:'#00933C',rc:'#0039A6',fc:'#FF6319',dev:'#FF6319',planned:'#444'};
+  return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c[s]||'#444'};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>`;
+}
+function sevBadge(s) {
+  return `<span class="badge badge-${s}">${s}</span>`;
+}
+function groupName(id) { const g = D.groups.find(x=>x.group_id===String(id)); return g ? g.group_name : id; }
+function subgroupName(id) { const sg = D.subgroups.find(x=>x.subgroup_id===String(id)); return sg ? sg.subgroup_name : id; }
+function engName(id) { const e = D.engineers.find(x=>x.engineer_id===id); return e ? e.name : id; }
+function lvl(sen) { return sen==='junior'?'L3':sen==='mid'?'L4':sen==='senior'?'L5':sen; }
 
-function badge(s) { return `<span class="badge ${BADGE_CLS[s]||'b-planned'}">${BADGE_TXT[s]||s}</span>`; }
-function stxt(s)  { return `<span class="${TEXT_CLS[s]||'t-planned'}">${STATUS_LABEL[s]||s}</span>`; }
-
-function sevCls(v) {
-  const m = { critical:'sev-critical', high:'sev-high', medium:'sev-medium', low:'sev-low' };
-  return `sev ${m[(v||'').toLowerCase()]||''}`;
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+function navigate(page) {
+  ['home','snapshot','compare'].forEach(p =>
+    document.getElementById('page-'+p).classList.toggle('active', p===page)
+  );
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  if (page==='snapshot') document.getElementById('nav-snapshot').classList.add('active');
+  if (page==='compare')  document.getElementById('nav-compare').classList.add('active');
+  history.replaceState(null,'','#'+page);
+  if (page==='snapshot') renderSnapshot();
+  if (page==='compare')  renderCompare();
 }
 
-// ─── DATA HELPERS ─────────────────────────────────────────────────────────────
-function featuresAt(date) {
-  return DATA.features.map(f => ({ ...f, _s: computeStatus(f, date) }));
+function switchTab(prefix, name, btn) {
+  const bar = document.getElementById(prefix+'-tab-bar');
+  bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // find sibling tab panels (children of same container)
+  const panelParent = document.getElementById('page-'+
+    (prefix==='snap'?'snapshot':'compare')
+  );
+  panelParent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(prefix+'-tab-'+name);
+  if (panel) panel.classList.add('active');
 }
 
-function countStatus(features) {
-  const c = { planned:0, in_development:0, feature_complete:0, release_complete:0, released:0 };
-  for (const f of features) c[f._s] = (c[f._s]||0) + 1;
-  return c;
-}
-
-function velocityByMonth(date, n) {
-  const out = [];
-  for (let i = n-1; i >= 0; i--) {
-    const ms = new Date(date.getFullYear(), date.getMonth()-i, 1);
-    const me = new Date(date.getFullYear(), date.getMonth()-i+1, 0, 23, 59, 59);
-    let cnt = 0;
-    for (const f of DATA.features) {
-      const rc = parseDate(f.release_complete_date);
-      if (!rc) continue;
-      const rel = new Date(rc.getTime() + 14*86400000);
-      if (rel >= ms && rel <= me) cnt++;
-    }
-    out.push({ label: ms.toLocaleDateString('en-US',{month:'short',year:'2-digit'}), n: cnt });
-  }
-  return out;
-}
-
-function velocityLast30(date) {
-  const from = new Date(date.getTime() - 30*86400000);
-  let c = 0;
-  for (const f of DATA.features) {
-    const rc = parseDate(f.release_complete_date);
-    if (!rc) continue;
-    const rel = new Date(rc.getTime() + 14*86400000);
-    if (rel > from && rel <= date) c++;
-  }
-  return c;
-}
-
-function avgCycleTime(features) {
-  let s = 0, n = 0;
-  for (const f of features) {
-    if (f._s !== 'released') continue;
-    const ds = parseDate(f.dev_start_date);
-    const rc = parseDate(f.release_complete_date);
-    if (!ds || !rc) continue;
-    const days = Math.round((new Date(rc.getTime()+14*86400000)-ds)/86400000);
-    if (days > 0 && days < 1000) { s+=days; n++; }
-  }
-  return n ? Math.round(s/n) : 0;
-}
-
-function hwGapByGroup(features) {
-  const m = {};
-  for (const g of DATA.groups) m[g.group_id] = { name:g.group_name, total:0, hw4:0 };
-  for (const f of features) {
-    const g = m[f.group_id]; if (!g) continue;
-    g.total++;
-    if ((f.hw_requirement||'').trim().toUpperCase() === 'HW4') g.hw4++;
-  }
-  return Object.values(m).filter(g => g.total > 0);
-}
-
-function engStats(features) {
-  const s = {};
-  for (const e of DATA.engineers) s[e.engineer_id] = { ...e, total:0, released:0, active:0 };
-  for (const f of features) {
-    const e = s[f.engineer_id]; if (!e) continue;
-    e.total++;
-    if (f._s === 'released') e.released++;
-    if (f._s === 'in_development' || f._s === 'feature_complete' || f._s === 'release_complete') e.active++;
-  }
-  return s;
-}
-
-function releaseRoadmap(features, date) {
-  const vm = {};
-  for (const f of features) {
-    if (!vm[f.version]) vm[f.version] = { version:f.version, release_date:f.release_date, counts:{planned:0,in_development:0,feature_complete:0,release_complete:0,released:0}, total:0 };
-    vm[f.version].counts[f._s]++;
-    vm[f.version].total++;
-  }
-  const ago90 = new Date(date.getTime() - 90*86400000);
-  const inflight=[], recent=[], upcoming=[];
-  for (const v of Object.values(vm)) {
-    const rd = parseDate(v.release_date);
-    const active = v.counts.in_development + v.counts.feature_complete + v.counts.release_complete;
-    const pct = v.total ? Math.round((v.counts.released/v.total)*100) : 0;
-    const row = { ...v, rd, pct };
-    if (active > 0) { inflight.push(row); }
-    else if (rd && rd <= date && rd >= ago90) { recent.push(row); }
-    else if (!rd || rd > date) { upcoming.push(row); }
-  }
-  const byDate = (a,b) => (!a.rd?1:!b.rd?-1:a.rd-b.rd);
-  inflight.sort(byDate);
-  recent.sort((a,b)=>byDate(b,a));
-  upcoming.sort(byDate);
-  return { inflight, recent, upcoming };
-}
-
-// ─── RENDER: ROADMAP TABLE ────────────────────────────────────────────────────
-function roadmapTable(rows, empty) {
-  if (!rows.length) return `<div class="empty">${empty}</div>`;
-  return `<div class="tscroll"><table class="tbl">
-    <thead><tr>
-      <th>Version</th><th>Release Date</th>
-      <th class="th-c">Total</th><th class="th-c t-dev">Dev</th>
-      <th class="th-c t-fc">FC</th><th class="th-c t-rc">RC</th>
-      <th class="th-c t-released">Released</th><th class="th-c">Progress</th>
-    </tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td class="nowrap" style="color:#fff;font-weight:700">${r.version}</td>
-      <td class="nowrap" style="color:#666">${r.release_date||'—'}</td>
-      <td class="td-c mono">${r.total}</td>
-      <td class="td-c mono t-dev">${r.counts.in_development||''}</td>
-      <td class="td-c mono t-fc">${r.counts.feature_complete||''}</td>
-      <td class="td-c mono t-rc">${r.counts.release_complete||''}</td>
-      <td class="td-c mono t-released">${r.counts.released||''}</td>
-      <td class="td-c">
-        <span class="prog"><span class="prog-fill" style="width:${r.pct}%"></span></span>
-        <span style="font-size:10px;color:#555;margin-left:5px">${r.pct}%</span>
-      </td>
-    </tr>`).join('')}</tbody>
-  </table></div>`;
-}
-
-// ─── RENDER: SNAPSHOT ─────────────────────────────────────────────────────────
-function renderSnapshot(dateStr) {
-  const date = parseDate(dateStr);
-  if (!date) { document.getElementById('snapshot-content').innerHTML='<div class="empty">Select a valid date above.</div>'; return; }
-
-  const feats = featuresAt(date);
-  const counts = countStatus(feats);
-  const total = feats.length;
-
-  // ── Program Status
-  const last30 = velocityLast30(date);
-  const cycle  = avgCycleTime(feats);
-  const vm3    = velocityByMonth(date, 3);
-  const avg3   = Math.round(vm3.reduce((s,v)=>s+v.n,0)/3);
-
-  const progStatus = `<div class="card">
-    <div class="card-title">Program Status</div>
-    <div class="status-counts">
-      <div class="sc-item"><div class="sc-val t-planned">${counts.planned}</div><div class="sc-lbl">Planned</div></div>
-      <div class="sc-item"><div class="sc-val t-dev">${counts.in_development}</div><div class="sc-lbl">In Development</div></div>
-      <div class="sc-item"><div class="sc-val t-fc">${counts.feature_complete}</div><div class="sc-lbl">Feature Complete</div></div>
-      <div class="sc-item"><div class="sc-val t-rc">${counts.release_complete}</div><div class="sc-lbl">Release Complete</div></div>
-      <div class="sc-item"><div class="sc-val t-released">${counts.released}</div><div class="sc-lbl">Released</div></div>
-    </div>
-    <div class="vel-metrics">
-      <div class="vel-m"><div class="val">${last30}</div><div class="lbl">Shipped last 30d</div></div>
-      <div class="vel-m"><div class="val">${avg3}</div><div class="lbl">Avg/month (3mo)</div></div>
-      <div class="vel-m"><div class="val">${cycle}d</div><div class="lbl">Avg cycle time</div></div>
-      <div class="vel-m"><div class="val">${Math.round((counts.released/total)*100)}%</div><div class="lbl">Overall complete</div></div>
-      <div class="vel-m"><div class="val">${counts.in_development+counts.feature_complete+counts.release_complete}</div><div class="lbl">In-flight</div></div>
-    </div>
-  </div>`;
-
-  // ── Release Roadmap
-  const rm = releaseRoadmap(feats, date);
-  const roadmap = `<div class="card">
-    <div class="card-title">Release Roadmap</div>
-    <div class="sec-hdr">In-Flight (${rm.inflight.length})</div>
-    ${roadmapTable(rm.inflight,'No in-flight releases at this date.')}
-    <div class="sec-hdr" style="margin-top:20px">Recently Released — last 90 days (${rm.recent.length})</div>
-    ${roadmapTable(rm.recent,'No releases in the last 90 days.')}
-    <div class="sec-hdr" style="margin-top:20px">Upcoming (${rm.upcoming.length})</div>
-    ${roadmapTable(rm.upcoming,'No upcoming releases.')}
-  </div>`;
-
-  // ── Feature Explorer
-  const gfm = {};
-  for (const f of feats) {
-    if (!gfm[f.group_id]) gfm[f.group_id] = {};
-    if (!gfm[f.group_id][f.subgroup_id]) gfm[f.group_id][f.subgroup_id] = [];
-    gfm[f.group_id][f.subgroup_id].push(f);
-  }
-  let feRows = '';
-  for (const g of DATA.groups) {
-    const subM = gfm[g.group_id]||{};
-    const gAll = Object.values(subM).flat();
-    if (!gAll.length) continue;
-    const gc = countStatus(gAll);
-    feRows += `<tr class="row-group">
-      <td>${g.group_name}</td>
-      <td class="td-c">${gAll.length}</td>
-      <td class="td-c t-planned">${gc.planned||'—'}</td>
-      <td class="td-c t-dev">${gc.in_development||'—'}</td>
-      <td class="td-c t-fc">${gc.feature_complete||'—'}</td>
-      <td class="td-c t-rc">${gc.release_complete||'—'}</td>
-      <td class="td-c t-released">${gc.released||'—'}</td>
-      <td class="td-c" style="color:#555">${Math.round(((gc.released||0)/gAll.length)*100)}%</td>
-    </tr>`;
-    for (const sub of DATA.subgroups.filter(s=>s.group_id===g.group_id)) {
-      const sf = subM[sub.subgroup_id]||[];
-      if (!sf.length) continue;
-      const sc = countStatus(sf);
-      feRows += `<tr class="row-sub">
-        <td style="color:#888">${sub.subgroup_name}</td>
-        <td class="td-c" style="color:#444">${sf.length}</td>
-        <td class="td-c t-planned">${sc.planned||'—'}</td>
-        <td class="td-c t-dev">${sc.in_development||'—'}</td>
-        <td class="td-c t-fc">${sc.feature_complete||'—'}</td>
-        <td class="td-c t-rc">${sc.release_complete||'—'}</td>
-        <td class="td-c t-released">${sc.released||'—'}</td>
-        <td class="td-c" style="color:#333">${Math.round(((sc.released||0)/sf.length)*100)}%</td>
-      </tr>`;
-    }
-  }
-  const feExplorer = `<div class="card">
-    <div class="card-title">Feature Explorer — Group &amp; Subgroup</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr>
-        <th>Group / Subgroup</th><th class="th-c">Total</th>
-        <th class="th-c">Planned</th><th class="th-c">Dev</th>
-        <th class="th-c">FC</th><th class="th-c">RC</th>
-        <th class="th-c">Released</th><th class="th-c">% Done</th>
-      </tr></thead>
-      <tbody>${feRows}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Team View
-  const es = engStats(feats);
-  const activeE = Object.values(es).filter(e=>e.active>0);
-  const senCls = s => ({senior:'sen-senior',mid:'sen-mid',junior:'sen-junior'}[s]||'sen-junior');
-
-  const engCards = activeE.length
-    ? activeE.map(e=>`<div class="eng-card">
-        <div class="eng-name">${e.name}</div>
-        <div class="eng-team">${e.team}</div>
-        <div class="eng-spec">${e.specialty}</div>
-        <div style="margin-bottom:8px"><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></div>
-        <div class="eng-stats">
-          <div class="eng-stat"><div class="v t-dev">${e.active}</div><div class="l">Active</div></div>
-          <div class="eng-stat"><div class="v t-released">${e.released}</div><div class="l">Released</div></div>
-          <div class="eng-stat"><div class="v" style="color:#444">${e.total}</div><div class="l">Total</div></div>
-        </div>
-      </div>`).join('')
-    : '<div class="empty">No active engineers at this date.</div>';
-
-  const rosterRows = Object.values(es).map(e=>`<tr>
-    <td style="color:#fff;font-weight:700">${e.name}</td>
-    <td><span style="color:#EE352E;font-size:9px;text-transform:uppercase;letter-spacing:.08em">${e.team}</span></td>
-    <td><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></td>
-    <td class="td-c mono">${e.total}</td>
-    <td class="td-c t-released mono">${e.released}</td>
-    <td class="td-c t-dev mono">${e.active}</td>
-    <td style="font-size:11px;color:#555;max-width:220px">${e.specialty}</td>
-  </tr>`).join('');
-
-  const teamView = `<div class="card">
-    <div class="card-title">Team View</div>
-    <div class="sec-hdr">Active Engineers (${activeE.length})</div>
-    <div class="eng-grid">${engCards}</div>
-    <div class="sec-hdr">Full Roster</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr>
-        <th>Name</th><th>Team</th><th>Seniority</th>
-        <th class="th-c">Total</th><th class="th-c">Released</th><th class="th-c">Active</th>
-        <th>Specialty</th>
-      </tr></thead>
-      <tbody>${rosterRows}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Risk Register
-  const risks = DATA.risks.filter(r=>{
-    const raised = parseDate(r.raised_date);
-    const resolved = parseDate(r.resolved_date);
-    if (raised && raised > date) return false;
-    if (resolved && resolved < date) return false;
-    return true;
-  });
-  const riskRows = risks.length
-    ? risks.map(r=>`<tr>
-        <td style="color:#444;font-size:10px">${r.risk_id}</td>
-        <td style="color:#fff;font-weight:700">${r.title}</td>
-        <td><span class="${sevCls(r.severity)}">${r.severity}</span></td>
-        <td><span class="${sevCls(r.probability)}">${r.probability}</span></td>
-        <td><span class="${sevCls(r.impact)}">${r.impact}</span></td>
-        <td style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em">${r.owner_team}</td>
-        <td style="font-size:11px;color:#555;max-width:260px">${r.mitigation}</td>
-        <td><span style="font-size:10px;font-weight:700;text-transform:uppercase;${r.status==='open'?'color:#FF6319':'color:#4ade80'}">${r.status}</span></td>
-      </tr>`).join('')
-    : '<tr><td colspan="8" class="empty">No active risks at this date.</td></tr>';
-
-  const riskReg = `<div class="card">
-    <div class="card-title">Risk Register (${risks.length})</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr>
-        <th>ID</th><th>Title</th><th>Severity</th><th>Prob</th><th>Impact</th>
-        <th>Owner</th><th>Mitigation</th><th>Status</th>
-      </tr></thead>
-      <tbody>${riskRows}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Hardware Gap
-  const hw = hwGapByGroup(feats);
-  const hw4total = feats.filter(f=>(f.hw_requirement||'').trim().toUpperCase()==='HW4').length;
-  const hwBars = hw.map(g=>{
-    const pct = g.total ? Math.round((g.hw4/g.total)*100) : 0;
-    return `<div class="hw-row">
-      <div class="hw-hdr">
-        <span>${g.name}</span>
-        <span><span class="hw-pct">${pct}% HW4-only</span> &nbsp;${g.hw4} / ${g.total} features</span>
-      </div>
-      <div class="hw-track"><div class="hw-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-
-  const hwSection = `<div class="card">
-    <div class="card-title">Hardware Gap — HW4-Only Feature Lock-out</div>
-    <div class="vel-metrics" style="margin-bottom:18px">
-      <div class="vel-m"><div class="val t-dev">${hw4total}</div><div class="lbl">HW4-only features</div></div>
-      <div class="vel-m"><div class="val t-released">${total-hw4total}</div><div class="lbl">Available HW3+HW4</div></div>
-      <div class="vel-m"><div class="val" style="color:#555">${total}</div><div class="lbl">Total features</div></div>
-    </div>
-    ${hwBars}
-  </div>`;
-
-  // ── Velocity Report
-  const velData = velocityByMonth(date, 12);
-  const maxV = Math.max(...velData.map(v=>v.n), 1);
-  const velBars = velData.map(v=>{
-    const h = v.n > 0 ? Math.max(Math.round((v.n/maxV)*76), 3) : 0;
-    return `<div class="vcol">
-      <div class="vval">${v.n||''}</div>
-      <div class="vbar" style="height:${h}px"></div>
-      <div class="vlbl">${v.label}</div>
-    </div>`;
-  }).join('');
-  const velTotal = velData.reduce((s,v)=>s+v.n,0);
-  const activeMo  = velData.filter(v=>v.n>0).length||1;
-
-  const velReport = `<div class="card">
-    <div class="card-title">Velocity Report — Features Released per Month (12mo)</div>
-    <div class="vel-chart">${velBars}</div>
-    <hr class="div">
-    <div class="vel-metrics">
-      <div class="vel-m"><div class="val">${velTotal}</div><div class="lbl">Features (12mo)</div></div>
-      <div class="vel-m"><div class="val">${Math.round(velTotal/activeMo)}</div><div class="lbl">Avg / active month</div></div>
-      <div class="vel-m"><div class="val">${cycle}d</div><div class="lbl">Avg cycle time</div></div>
-      <div class="vel-m"><div class="val">${Math.max(...velData.map(v=>v.n))}</div><div class="lbl">Peak month</div></div>
-    </div>
-  </div>`;
-
-  document.getElementById('snapshot-content').innerHTML = `
-    <div class="page-heading">
-      <div class="page-title">Program Snapshot</div>
-      <div class="page-subtitle">Feature lifecycle status as of <strong style="color:#fff">${fmtDate(date)}</strong> &nbsp;—&nbsp; ${total.toLocaleString()} features across ${DATA.releases.length} releases</div>
-    </div>
-    ${progStatus}${roadmap}${feExplorer}${teamView}${riskReg}${hwSection}${velReport}
-  `;
-}
-
-// ─── RENDER: COMPARE ──────────────────────────────────────────────────────────
-function renderCompare(fromStr, toStr) {
-  const fromDate = parseDate(fromStr);
-  const toDate   = parseDate(toStr);
-  if (!fromDate || !toDate || fromDate >= toDate) {
-    document.getElementById('compare-content').innerHTML = '<div class="empty">Select valid From / To dates (From must be before To).</div>';
+/* ══════════════════════════════════════
+   SNAPSHOT ENTRY POINTS
+══════════════════════════════════════ */
+function applySnapshot() {
+  const val = document.getElementById('snap-date-input').value.trim();
+  const d = val ? resolveInput(val) : null;
+  if (val && !d) {
+    document.getElementById('snap-date-display').textContent = '⚠ Unrecognized format';
     return;
   }
-
-  const fromFeats = featuresAt(fromDate);
-  const toFeats   = featuresAt(toDate);
-
-  // Features that became released in window
-  const shipped = DATA.features.filter(f=>{
-    const rc = parseDate(f.release_complete_date); if (!rc) return false;
-    const rel = new Date(rc.getTime()+14*86400000);
-    return rel > fromDate && rel <= toDate;
-  });
-
-  // Versions released in window
-  const versInWindow = DATA.releases.filter(r=>{
-    const rd = parseDate(r.release_date);
-    return rd && rd > fromDate && rd <= toDate;
-  });
-
-  // Status transitions matrix
-  const STATUSES = ['planned','in_development','feature_complete','release_complete','released'];
-  const SHORT = { planned:'Plan', in_development:'Dev', feature_complete:'FC', release_complete:'RC', released:'Rel' };
-  const trans = {};
-  for (let i=0;i<DATA.features.length;i++) {
-    const fs = fromFeats[i]._s, ts = toFeats[i]._s;
-    if (fs !== ts) { const k=`${fs}||${ts}`; trans[k]=(trans[k]||0)+1; }
-  }
-
-  // Engineer productivity
-  const engProd = {};
-  for (const e of DATA.engineers) engProd[e.engineer_id] = {...e, shipped:0, started:0};
-  for (const f of DATA.features) {
-    const e = engProd[f.engineer_id]; if (!e) continue;
-    const rc = parseDate(f.release_complete_date);
-    if (rc) { const rel=new Date(rc.getTime()+14*86400000); if(rel>fromDate&&rel<=toDate) e.shipped++; }
-    const ds = parseDate(f.dev_start_date);
-    if (ds && ds>fromDate && ds<=toDate) e.started++;
-  }
-
-  // Features shipped by group
-  const byGroup = {};
-  for (const g of DATA.groups) byGroup[g.group_id]={name:g.group_name,shipped:0,total:0};
-  for (const f of DATA.features) { const g=byGroup[f.group_id]; if(g) g.total++; }
-  for (const f of shipped)       { const g=byGroup[f.group_id]; if(g) g.shipped++; }
-
-  // Active risks in window
-  const activeRisks = DATA.risks.filter(r=>{
-    const raised=parseDate(r.raised_date), resolved=parseDate(r.resolved_date);
-    if(raised && raised>toDate) return false;
-    if(resolved && resolved<=fromDate) return false;
-    return true;
-  });
-
-  // Velocity comparison
-  const windowDays = Math.round((toDate-fromDate)/86400000);
-  const prevFrom = new Date(fromDate.getTime()-windowDays*86400000);
-  const prevShipped = DATA.features.filter(f=>{
-    const rc=parseDate(f.release_complete_date); if(!rc) return false;
-    const rel=new Date(rc.getTime()+14*86400000);
-    return rel>prevFrom && rel<=fromDate;
-  }).length;
-
-  const activeEngCount = Object.values(engProd).filter(e=>e.shipped>0||e.started>0).length;
-  const velChange = prevShipped>0 ? Math.round(((shipped.length-prevShipped)/prevShipped)*100) : null;
-  const velTxt   = velChange===null ? '—' : (velChange>=0?`+${velChange}%`:`${velChange}%`);
-  const velColor = velChange===null ? '#555' : velChange>=0 ? '#4ade80' : '#EE352E';
-
-  // ── Stat boxes
-  const statBoxes = `<div class="stat-grid">
-    <div class="stat-box"><div class="stat-val">${versInWindow.length}</div><div class="stat-lbl">Versions Released</div></div>
-    <div class="stat-box"><div class="stat-val">${shipped.length}</div><div class="stat-lbl">Features Shipped</div></div>
-    <div class="stat-box"><div class="stat-val">${activeEngCount}</div><div class="stat-lbl">Active Engineers</div></div>
-    <div class="stat-box"><div class="stat-val">${activeRisks.length}</div><div class="stat-lbl">Active Risks</div></div>
-  </div>`;
-
-  // ── Features by group
-  const grpRows = Object.values(byGroup)
-    .filter(g=>g.shipped>0||g.total>0)
-    .sort((a,b)=>b.shipped-a.shipped)
-    .map(g=>{
-      const pct = g.total?Math.round((g.shipped/g.total)*100):0;
-      return `<tr>
-        <td style="color:#fff">${g.name}</td>
-        <td class="td-c t-released mono">${g.shipped}</td>
-        <td class="td-c" style="color:#444">${g.total}</td>
-        <td class="td-c" style="color:#555">${pct}%</td>
-      </tr>`;
-    }).join('');
-
-  const byGrpSection = `<div class="card">
-    <div class="card-title">Features Shipped by Group</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr><th>Group</th><th class="th-c">Shipped</th><th class="th-c">Total</th><th class="th-c">% of Group</th></tr></thead>
-      <tbody>${grpRows||'<tr><td colspan="4" class="empty">No features shipped in this window.</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Engineer productivity
-  const senCls = s=>({senior:'sen-senior',mid:'sen-mid',junior:'sen-junior'}[s]||'sen-junior');
-  const engRows = Object.values(engProd)
-    .filter(e=>e.shipped>0||e.started>0)
-    .sort((a,b)=>b.shipped-a.shipped)
-    .map(e=>`<tr>
-      <td style="color:#fff;font-weight:700">${e.name}</td>
-      <td><span style="color:#EE352E;font-size:9px;text-transform:uppercase;letter-spacing:.08em">${e.team}</span></td>
-      <td><span class="seniority ${senCls(e.seniority)}">${e.seniority}</span></td>
-      <td class="td-c t-released mono">${e.shipped}</td>
-      <td class="td-c t-dev mono">${e.started}</td>
-    </tr>`).join('');
-
-  const engSection = `<div class="card">
-    <div class="card-title">Engineer Productivity</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr><th>Engineer</th><th>Team</th><th>Seniority</th><th class="th-c">Shipped</th><th class="th-c">Started</th></tr></thead>
-      <tbody>${engRows||'<tr><td colspan="5" class="empty">No engineer activity in this window.</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Versions in window
-  const verRows = versInWindow
-    .sort((a,b)=>parseDate(a.release_date)-parseDate(b.release_date))
-    .map(r=>`<tr>
-      <td style="color:#fff;font-weight:700">${r.version}</td>
-      <td style="color:#666">${r.release_date}</td>
-      <td style="color:#555;font-size:11px">${r.fsd_version||'—'}</td>
-      <td class="td-c mono">${r.feature_count}</td>
-    </tr>`).join('');
-
-  const versSection = `<div class="card">
-    <div class="card-title">Versions Released in Window (${versInWindow.length})</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr><th>Version</th><th>Release Date</th><th>FSD Version</th><th class="th-c">Features</th></tr></thead>
-      <tbody>${verRows||'<tr><td colspan="4" class="empty">No versions released in this window.</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
-
-  // ── Status transitions + velocity
-  const matHdr = `<tr><th>FROM → TO</th>${STATUSES.map(s=>`<th class="${TEXT_CLS[s]}">${SHORT[s]}</th>`).join('')}</tr>`;
-  const matBody = STATUSES.map(fs=>`<tr>
-    <th class="${TEXT_CLS[fs]}">${SHORT[fs]}</th>
-    ${STATUSES.map(ts=>{const n=trans[`${fs}||${ts}`]||0;return`<td class="${n>0?'nz':''}">${n||''}</td>`;}).join('')}
-  </tr>`).join('');
-
-  const velSection = `<div class="card">
-    <div class="card-title">Velocity Comparison &amp; Status Transitions</div>
-    <div class="vel-metrics" style="margin-bottom:20px">
-      <div class="vel-m"><div class="val">${shipped.length}</div><div class="lbl">Shipped (this window)</div></div>
-      <div class="vel-m"><div class="val">${prevShipped}</div><div class="lbl">Shipped (prev window)</div></div>
-      <div class="vel-m"><div class="val" style="color:${velColor}">${velTxt}</div><div class="lbl">Velocity change</div></div>
-      <div class="vel-m"><div class="val">${windowDays}d</div><div class="lbl">Window length</div></div>
-    </div>
-    <div class="sec-hdr">Status Transitions — features that changed state</div>
-    <div class="mat-wrap"><table class="mat">
-      <thead>${matHdr}</thead>
-      <tbody>${matBody}</tbody>
-    </table></div>
-    <div style="font-size:10px;color:#2a2a2a;margin-top:8px">Rows = from-state, columns = to-state. Blank diagonal = no change.</div>
-  </div>`;
-
-  // ── Active risks
-  const riskRows2 = activeRisks.map(r=>`<tr>
-    <td style="color:#444;font-size:10px">${r.risk_id}</td>
-    <td style="color:#fff;font-weight:700">${r.title}</td>
-    <td><span class="${sevCls(r.severity)}">${r.severity}</span></td>
-    <td style="font-size:10px;font-weight:700;text-transform:uppercase;${r.status==='open'?'color:#FF6319':'color:#4ade80'}">${r.status}</td>
-    <td style="font-size:10px;color:#555">${r.raised_date}</td>
-  </tr>`).join('');
-
-  const riskSection = `<div class="card">
-    <div class="card-title">Active Risks (${activeRisks.length})</div>
-    <div class="tscroll"><table class="tbl">
-      <thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Raised</th></tr></thead>
-      <tbody>${riskRows2||'<tr><td colspan="5" class="empty">No active risks in this window.</td></tr>'}</tbody>
-    </table></div>
-  </div>`;
-
-  document.getElementById('compare-content').innerHTML = `
-    <div class="page-heading">
-      <div class="page-title">Period Comparison</div>
-      <div class="page-subtitle"><strong style="color:#fff">${fmtDate(fromDate)}</strong> → <strong style="color:#fff">${fmtDate(toDate)}</strong> &nbsp;—&nbsp; ${windowDays}-day window</div>
-    </div>
-    ${statBoxes}${byGrpSection}${engSection}${versSection}${velSection}${riskSection}
-  `;
-}
-
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
-function showPage(page) {
-  ['home','snapshot','compare'].forEach(p=>{
-    document.getElementById('page-'+p).style.display = p===page?'':'none';
-  });
-  document.querySelectorAll('.nav-link[data-page]').forEach(el=>{
-    el.classList.toggle('active', el.dataset.page===page);
-  });
-  window.scrollTo(0,0);
-  history.replaceState(null,'','#'+page);
+  snapDate = d;
+  document.getElementById('snap-date-display').textContent =
+    d ? 'As of: ' + fmtDate(d) : 'Showing full dataset';
+  renderSnapshot();
 }
 
 function goSnapshot() {
-  const d = document.getElementById('snap-date').value;
-  document.getElementById('snap-date2').value = d;
-  showPage('snapshot');
-  renderSnapshot(d);
-}
-
-function runSnapshot() {
-  const d = document.getElementById('snap-date2').value;
-  document.getElementById('snap-date').value = d;
-  renderSnapshot(d);
+  const val = document.getElementById('home-snap-date').value.trim();
+  snapDate = val ? resolveInput(val) : null;
+  if (val && !snapDate) { alert('Unrecognized date/version: ' + val); return; }
+  document.getElementById('snap-date-input').value = val;
+  document.getElementById('snap-date-display').textContent =
+    snapDate ? 'As of: '+fmtDate(snapDate) : 'Showing full dataset';
+  navigate('snapshot');
 }
 
 function goCompare() {
-  const from = document.getElementById('cmp-from').value;
-  const to   = document.getElementById('cmp-to').value;
-  document.getElementById('cmp-from2').value = from;
-  document.getElementById('cmp-to2').value   = to;
-  showPage('compare');
-  renderCompare(from, to);
+  document.getElementById('cmp-from').value = document.getElementById('home-from').value;
+  document.getElementById('cmp-to').value = document.getElementById('home-to').value;
+  navigate('compare');
 }
 
-function runCompare() {
-  const from = document.getElementById('cmp-from2').value;
-  const to   = document.getElementById('cmp-to2').value;
-  document.getElementById('cmp-from').value = from;
-  document.getElementById('cmp-to').value   = to;
-  renderCompare(from, to);
+function applyCompare() {
+  const fv = document.getElementById('cmp-from').value.trim();
+  const tv = document.getElementById('cmp-to').value.trim();
+  cmpFrom = fv ? resolveInput(fv) : null;
+  cmpTo   = tv ? resolveInput(tv) : null;
+  if (fv && !cmpFrom) { document.getElementById('cmp-range-display').textContent='⚠ Bad from'; return; }
+  if (tv && !cmpTo)   { document.getElementById('cmp-range-display').textContent='⚠ Bad to'; return; }
+  document.getElementById('cmp-range-display').textContent =
+    (cmpFrom||cmpTo) ? (cmpFrom?fmtDate(cmpFrom):'Start')+' → '+(cmpTo?fmtDate(cmpTo):'End') : '';
+  renderCompare();
 }
 
-// ─── HOME STATS ───────────────────────────────────────────────────────────────
-function renderHomeStats() {
-  const openRisks = DATA.risks.filter(r=>r.status==='open').length;
-  document.getElementById('home-stats').innerHTML = `
-    <div class="stat-box"><div class="stat-val">${DATA.releases.length}</div><div class="stat-lbl">Software Versions</div></div>
-    <div class="stat-box"><div class="stat-val">${DATA.features.length.toLocaleString()}</div><div class="stat-lbl">Features Tracked</div></div>
-    <div class="stat-box"><div class="stat-val">${DATA.engineers.length}</div><div class="stat-lbl">Engineers</div></div>
-    <div class="stat-box"><div class="stat-val">${openRisks}</div><div class="stat-lbl">Open Risks</div></div>
+/* ══════════════════════════════════════
+   HOME
+══════════════════════════════════════ */
+function renderHome() {
+  document.getElementById('home-stats').innerHTML = [
+    {n:D.releases.length, l:'Versions'},
+    {n:D.features.length, l:'Features'},
+    {n:D.engineers.length, l:'Engineers'},
+    {n:D.risks.length,    l:'Risks'},
+  ].map(x=>`<div class="stat-box"><div class="stat-num">${x.n}</div><div class="stat-label">${x.l}</div></div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   SNAPSHOT
+══════════════════════════════════════ */
+function renderSnapshot() {
+  const features = D.features.map(f => ({...f, _status: computeStatus(f, snapDate)}));
+  renderOverview(features);
+  renderRoadmap(features);
+  renderFeatures(features);
+  renderTeam(features);
+  renderRisks(features);
+  renderVelocity(features);
+}
+
+/* OVERVIEW */
+function renderOverview(features) {
+  const c = {planned:0,dev:0,fc:0,rc:0,released:0};
+  features.forEach(f => { if (c[f._status]!==undefined) c[f._status]++; });
+
+  document.getElementById('snap-status-boxes').innerHTML = [
+    {k:'planned',l:'Planned',   col:'#444'},
+    {k:'dev',    l:'In Dev',    col:'#FF6319'},
+    {k:'fc',     l:'FC',        col:'#FF6319'},
+    {k:'rc',     l:'RC',        col:'#0039A6'},
+    {k:'released',l:'Released', col:'#00933C'},
+  ].map(s=>`<div class="status-box">
+    <div class="status-box-num">${c[s.k]}</div>
+    <div class="status-box-dot-row">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${s.col}"></span>
+      <span class="status-box-label">${s.l}</span>
+    </div>
+  </div>`).join('');
+
+  const relVers = D.releases.map(r=>({...r,_d:parseDate(r.release_date)}))
+    .filter(r=>!snapDate||r._d<=snapDate);
+  const relFeats = features.filter(f=>f._status==='released');
+  const avgPR = relVers.length ? (relFeats.length/relVers.length).toFixed(1) : 0;
+  let cycles=[];
+  relFeats.forEach(f=>{const ds=parseDate(f.dev_start_date),rc=parseDate(f.release_complete_date);if(ds&&rc)cycles.push((rc-ds)/86400000);});
+  const avgC = cycles.length ? Math.round(cycles.reduce((a,b)=>a+b,0)/cycles.length) : 0;
+
+  document.getElementById('snap-vel-boxes').innerHTML = [
+    {n:relVers.length,  l:'Versions Released'},
+    {n:relFeats.length, l:'Features Released'},
+    {n:avgPR,           l:'Avg / Release'},
+    {n:avgC+'d',        l:'Avg Cycle Time'},
+  ].map(v=>`<div class="vel-box"><div class="vel-box-num">${v.n}</div><div class="vel-box-label">${v.l}</div></div>`).join('');
+
+  // health
+  const sorted = relVers.sort((a,b)=>a._d-b._d);
+  const span = sorted.length>=2 ? (sorted[sorted.length-1]._d - sorted[0]._d)/86400000 : 365;
+  const vpy = (relVers.length/(span/365)).toFixed(1);
+  const compPct = features.length ? Math.round(relFeats.length/features.length*100) : 0;
+  const critHigh = D.risks.filter(r=>r.status==='open'&&(r.severity==='critical'||r.severity==='high')).length;
+
+  document.getElementById('snap-health').innerHTML = [
+    {s:+vpy>=30?'released':'dev', t:'Release Cadence', v:vpy+' versions/year — '+(+vpy>=30?'Healthy':'Below target')},
+    {s:compPct>=90?'released':compPct>=75?'fc':'dev', t:'Completion Rate', v:compPct+'% of features released'},
+    {s:critHigh===0?'released':'dev', t:'Risk Level', v:critHigh+' open critical/high risk'+(critHigh!==1?'s':'')},
+  ].map(h=>{
+    const col={released:'#00933C',fc:'#FF6319',dev:'#EE352E'}[h.s]||'#444';
+    return `<div class="health-item">
+      <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${col};flex-shrink:0;margin-top:2px"></span>
+      <div><div class="health-text-title">${h.t}</div><div class="health-text-val">${h.v}</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ROADMAP */
+function renderRoadmap(features) {
+  const byVer={};
+  features.forEach(f=>{byVer[f.version]=byVer[f.version]||[];byVer[f.version].push(f);});
+  const asOf = snapDate || new Date();
+  const allRels = D.releases.map(r=>({...r,_d:parseDate(r.release_date)}));
+
+  // in-flight: last 90 days before asOf
+  const horizon = new Date(asOf.getTime()-90*86400000);
+  const inFlight = allRels.filter(r=>r._d&&r._d>=horizon&&r._d<=asOf)
+    .sort((a,b)=>b._d-a._d).slice(0,10);
+
+  document.getElementById('roadmap-inflight-body').innerHTML =
+    inFlight.length===0
+    ? '<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
+    : inFlight.map(r=>{
+        const vf=byVer[r.version]||[];
+        const rel=vf.filter(f=>f._status==='released').length;
+        const pct=vf.length?Math.round(rel/vf.length*100):100;
+        return `<tr>
+          <td><code style="font-size:13px;color:#ccc">${r.version}</code></td>
+          <td style="font-size:13px">${fmtDate(r._d)}</td>
+          <td>${vf.length}</td>
+          <td><span style="font-size:12px;color:#888">${r.fsd_version||'—'}</span></td>
+          <td><div style="display:flex;align-items:center;gap:8px">
+            <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+            <span style="font-size:12px;color:#888">${pct}%</span>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+  const recent = allRels.filter(r=>r._d&&r._d<=asOf).sort((a,b)=>b._d-a._d).slice(0,8);
+  document.getElementById('roadmap-recent-body').innerHTML = recent.map(r=>
+    `<tr>
+      <td><code style="font-size:12px;color:#ccc">${r.version}</code></td>
+      <td style="font-size:12px">${fmtDate(r._d)}</td>
+      <td>${(byVer[r.version]||[]).length}</td>
+      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
+    </tr>`
+  ).join('') || '<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+
+  const upcoming = allRels.filter(r=>r._d&&r._d>asOf).sort((a,b)=>a._d-b._d).slice(0,8);
+  document.getElementById('roadmap-upcoming-body').innerHTML = upcoming.map(r=>
+    `<tr>
+      <td><code style="font-size:12px;color:#ccc">${r.version}</code></td>
+      <td style="font-size:12px">${fmtDate(r._d)}</td>
+      <td>${(byVer[r.version]||[]).length}</td>
+      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
+    </tr>`
+  ).join('') || '<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+}
+
+/* FEATURES (expandable hierarchy) */
+function renderFeatures(features) {
+  const byGroup={};
+  features.forEach(f=>{
+    byGroup[f.group_id]=byGroup[f.group_id]||{};
+    byGroup[f.group_id][f.subgroup_id]=byGroup[f.group_id][f.subgroup_id]||[];
+    byGroup[f.group_id][f.subgroup_id].push(f);
+  });
+  function counts(arr){const c={planned:0,dev:0,fc:0,rc:0,released:0};arr.forEach(f=>c[f._status]!==undefined&&c[f._status]++);return c;}
+
+  let rows='';
+  Object.keys(byGroup).sort((a,b)=>+a-+b).forEach(gid=>{
+    const allG=Object.values(byGroup[gid]).flat();
+    const gc=counts(allG);
+    const gid_s='grp-'+gid;
+    rows+=`<tr class="row-group" id="${gid_s}" onclick="toggleRows('${gid_s}')">
+      <td><span class="expand-icon" id="ei-${gid_s}">▶</span>${groupName(gid)}</td>
+      <td></td><td></td><td></td><td></td>
+      <td style="color:#555">${gc.planned}</td><td style="color:#FF6319">${gc.dev}</td>
+      <td style="color:#FF6319">${gc.fc}</td><td style="color:#0039A6">${gc.rc}</td>
+      <td style="color:#00933C">${gc.released}</td>
+    </tr>`;
+
+    Object.keys(byGroup[gid]).sort((a,b)=>+a-+b).forEach(sgid=>{
+      const sgFeats=byGroup[gid][sgid];
+      const sc=counts(sgFeats);
+      const sgid_s='sg-'+gid+'-'+sgid;
+      rows+=`<tr class="row-subgroup" id="${sgid_s}" data-parent="${gid_s}" style="display:none" onclick="toggleRows('${sgid_s}')">
+        <td><span class="expand-icon" id="ei-${sgid_s}">▶</span>${subgroupName(sgid)}</td>
+        <td></td><td></td><td></td><td></td>
+        <td style="color:#555">${sc.planned}</td><td style="color:#FF6319">${sc.dev}</td>
+        <td style="color:#FF6319">${sc.fc}</td><td style="color:#0039A6">${sc.rc}</td>
+        <td style="color:#00933C">${sc.released}</td>
+      </tr>`;
+
+      sgFeats.forEach(f=>{
+        rows+=`<tr class="row-feature" data-parent="${sgid_s}" style="display:none">
+          <td>${f.feature_name}</td>
+          <td>${statusBadge(f._status)}</td>
+          <td style="font-size:13px">${engName(f.engineer_id)}</td>
+          <td style="font-size:12px;color:#888">${f.dev_start_date||'—'}</td>
+          <td style="font-size:12px;color:#888">${f.release_complete_date||'—'}</td>
+          <td></td><td></td><td></td><td></td><td></td>
+        </tr>`;
+      });
+    });
+  });
+  document.getElementById('features-body').innerHTML=rows;
+}
+
+function toggleRows(parentId) {
+  const parentRow = document.getElementById(parentId);
+  const icon = document.getElementById('ei-'+parentId);
+  const isOpen = parentRow.classList.contains('row-expanded');
+  parentRow.classList.toggle('row-expanded', !isOpen);
+
+  if (isOpen) {
+    // collapse: hide all descendants
+    collapseDescendants(parentId);
+  } else {
+    // expand: show direct children only
+    document.querySelectorAll('[data-parent="'+parentId+'"]').forEach(r=>{
+      r.style.display='';
+    });
+  }
+}
+
+function collapseDescendants(parentId) {
+  document.querySelectorAll('[data-parent="'+parentId+'"]').forEach(r=>{
+    r.style.display='none';
+    const rid=r.id;
+    if(rid){
+      r.classList.remove('row-expanded');
+      const icon=document.getElementById('ei-'+rid);
+      if(icon) icon.style.transform='';
+      collapseDescendants(rid);
+    }
+  });
+}
+
+/* TEAM */
+function renderTeam(features) {
+  const teams=[...new Set(D.engineers.map(e=>e.team))];
+  let html=`<div class="org-tpm"><div class="org-tpm-node">TPM: Sarthak Jethi</div><div class="org-teams">`;
+  teams.forEach(team=>{
+    const engs=D.engineers.filter(e=>e.team===team);
+    const col=TEAM_COLORS[team]||'#444';
+    html+=`<div class="org-team">
+      <div class="org-team-node" style="background:${col}22;color:${col};border:1px solid ${col}44"
+        onclick="highlightTeam('${team}')" id="org-team-${team}">
+        ${TEAM_LABELS[team]||team}
+      </div>
+      <div class="org-engineers">`;
+    engs.forEach(e=>{
+      html+=`<div class="org-eng-card" id="org-eng-${e.engineer_id}" onclick="showEngDetail('${e.engineer_id}',event)">
+        <div class="org-eng-name">${e.name.split(' ')[0]}</div>
+        <div class="org-eng-level">${lvl(e.seniority)}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  html+='</div></div>';
+  document.getElementById('org-chart').innerHTML=html;
+
+  // roster
+  const engRel={},engAct={};
+  features.forEach(f=>{
+    if(f._status==='released') engRel[f.engineer_id]=(engRel[f.engineer_id]||0)+1;
+    if(['dev','fc','rc'].includes(f._status)) engAct[f.engineer_id]=(engAct[f.engineer_id]||0)+1;
+  });
+  document.getElementById('team-roster-body').innerHTML=D.engineers.map(e=>{
+    const col=TEAM_COLORS[e.team]||'#444';
+    return `<tr>
+      <td style="font-weight:700">${e.name}</td>
+      <td><span style="color:${col};font-size:13px">${TEAM_LABELS[e.team]||e.team}</span></td>
+      <td>${lvl(e.seniority)}</td>
+      <td style="font-size:13px;color:#888">${e.specialty}</td>
+      <td>${engAct[e.engineer_id]||0}</td>
+      <td>${engRel[e.engineer_id]||0}</td>
+    </tr>`;
+  }).join('');
+}
+
+function highlightTeam(team) {
+  document.querySelectorAll('.org-team-node').forEach(n=>n.style.outline='');
+  document.getElementById('org-team-'+team).style.outline='2px solid #fff';
+  document.querySelectorAll('.org-eng-card').forEach(c=>{
+    const eid=c.id.replace('org-eng-','');
+    const e=D.engineers.find(x=>x.engineer_id===eid);
+    c.style.opacity=e&&e.team===team?'1':'0.25';
+  });
+}
+
+function showEngDetail(eid,ev) {
+  ev&&ev.stopPropagation();
+  const eng=D.engineers.find(e=>e.engineer_id===eid);
+  if(!eng)return;
+  document.querySelectorAll('.org-eng-card').forEach(c=>c.classList.remove('eng-selected'));
+  document.getElementById('org-eng-'+eid)?.classList.add('eng-selected');
+
+  const feats=D.features.map(f=>({...f,_status:computeStatus(f,snapDate)})).filter(f=>f.engineer_id===eid);
+  const rel=feats.filter(f=>f._status==='released');
+  const active=feats.filter(f=>['dev','fc','rc'].includes(f._status));
+  let cy=[];
+  rel.forEach(f=>{const ds=parseDate(f.dev_start_date),rc=parseDate(f.release_complete_date);if(ds&&rc)cy.push((rc-ds)/86400000);});
+  const avgC=cy.length?Math.round(cy.reduce((a,b)=>a+b,0)/cy.length):0;
+  const openR=D.risks.filter(r=>r.owner_team===eng.team&&r.status==='open').length;
+  const col=TEAM_COLORS[eng.team]||'#444';
+
+  const panel=document.getElementById('eng-detail-panel');
+  panel.innerHTML=`
+    <div class="eng-panel-header">
+      <div>
+        <div class="eng-panel-name">${eng.name}</div>
+        <div class="eng-panel-meta" style="color:${col}">${TEAM_LABELS[eng.team]||eng.team} · ${lvl(eng.seniority)} · ${eng.specialty}</div>
+      </div>
+      <button class="eng-panel-close" onclick="closeEngPanel()">×</button>
+    </div>
+    <div class="eng-stats">
+      <div class="eng-stat"><div class="eng-stat-num">${rel.length}</div><div class="eng-stat-label">Released</div></div>
+      <div class="eng-stat"><div class="eng-stat-num">${active.length}</div><div class="eng-stat-label">Active</div></div>
+      <div class="eng-stat"><div class="eng-stat-num">${avgC}d</div><div class="eng-stat-label">Avg Cycle</div></div>
+      <div class="eng-stat"><div class="eng-stat-num">${openR}</div><div class="eng-stat-label">Risk Exposure</div></div>
+    </div>
+    <div class="sec-title-sm">Active Features</div>
+    ${active.length
+      ? active.map(f=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #0d0d0d">
+          ${dotInline(f._status)}<span style="font-size:13px">${f.feature_name}</span>
+          <span style="font-size:11px;color:#888;margin-left:auto">${f.version}</span>
+        </div>`).join('')
+      : '<div class="muted" style="font-size:13px">No active features</div>'}
   `;
+  panel.classList.add('open');
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-(async function init() {
-  try {
-    const res = await fetch('/data.json');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    DATA = await res.json();
+function closeEngPanel() {
+  document.getElementById('eng-detail-panel').classList.remove('open');
+  document.querySelectorAll('.org-eng-card').forEach(c=>c.classList.remove('eng-selected'));
+}
 
-    for (const g of DATA.groups)    GROUP_MAP[g.group_id]    = g;
-    for (const s of DATA.subgroups) SUB_MAP[s.subgroup_id]   = s;
-    for (const e of DATA.engineers) ENG_MAP[e.engineer_id]   = e;
+/* RISKS */
+function renderRisks(features) {
+  const probs=['high','medium','low'];
+  const impacts=['low','medium','high'];
+  function cellSev(p,i){
+    if(p==='high'&&i==='high') return 'critical';
+    if(p==='high'||i==='high') return 'high';
+    if(p==='medium'||i==='medium') return 'medium';
+    return 'low';
+  }
 
-    const todayISO  = isoDate(todayDate());
-    const ago90ISO  = isoDate(daysAgo(90));
+  let hm = '<div></div>'+impacts.map(i=>`<div class="heatmap-col-header">${i.charAt(0).toUpperCase()+i.slice(1)} Impact</div>`).join('');
+  probs.forEach(p=>{
+    hm+=`<div class="heatmap-label">${p.charAt(0).toUpperCase()+p.slice(1)}<br>Prob</div>`;
+    impacts.forEach(i=>{
+      const sev=cellSev(p,i);
+      const risks=D.risks.filter(r=>r.probability===p&&r.impact===i);
+      hm+=`<div class="heatmap-cell heat-${sev}">${risks.map(r=>`<span class="risk-chip badge badge-${sev}" title="${r.title}">${r.risk_id}</span>`).join('')}</div>`;
+    });
+  });
+  document.getElementById('risk-heatmap').innerHTML=hm;
 
-    document.getElementById('snap-date').value  = todayISO;
-    document.getElementById('snap-date2').value = todayISO;
-    document.getElementById('cmp-from').value   = ago90ISO;
-    document.getElementById('cmp-from2').value  = ago90ISO;
-    document.getElementById('cmp-to').value     = todayISO;
-    document.getElementById('cmp-to2').value    = todayISO;
+  document.getElementById('risk-body').innerHTML=D.risks.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:12px">${r.risk_id}</td>
+    <td style="font-size:13px;max-width:260px">${r.title}</td>
+    <td>${sevBadge(r.severity)}</td>
+    <td style="font-size:13px;color:#888">${r.probability}</td>
+    <td style="font-size:13px;color:#888">${r.impact}</td>
+    <td style="font-size:12px;color:#888">${r.owner_team}</td>
+    <td><span class="badge badge-${r.status}">${r.status}</span></td>
+  </tr>`).join('');
 
-    renderHomeStats();
+  const asOf=snapDate||new Date();
+  const stuck=features.filter(f=>{
+    if(f._status!=='dev')return false;
+    const ds=parseDate(f.dev_start_date);
+    return ds&&(asOf-ds)/86400000>60;
+  });
+  document.getElementById('stuck-features').innerHTML=stuck.length===0
+    ? '<div class="muted" style="font-size:13px;padding:12px 0">No features stuck in dev &gt;60 days</div>'
+    : `<div class="table-scroll"><table class="data-table"><thead><tr><th>Feature</th><th>Engineer</th><th>Dev Start</th><th>Days in Dev</th></tr></thead><tbody>
+        ${stuck.map(f=>{const days=Math.round((asOf-parseDate(f.dev_start_date))/86400000);
+          return `<tr>
+            <td style="font-size:13px">${f.feature_name}</td>
+            <td style="font-size:13px">${engName(f.engineer_id)}</td>
+            <td style="font-size:12px;color:#888">${f.dev_start_date}</td>
+            <td><span class="badge badge-high">${days}d</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+}
 
-    const hash = window.location.hash.replace('#','');
-    if (hash === 'snapshot') { showPage('snapshot'); renderSnapshot(todayISO); }
-    else if (hash === 'compare') { showPage('compare'); renderCompare(ago90ISO, todayISO); }
-    else { showPage('home'); }
+/* VELOCITY */
+function renderVelocity(features) {
+  const relFeats=features.filter(f=>f._status==='released');
+  const byMonth={};
+  relFeats.forEach(f=>{
+    const d=parseDate(f.release_date);
+    if(!d)return;
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    byMonth[k]=(byMonth[k]||0)+1;
+  });
 
-    window.addEventListener('hashchange', ()=>{
-      const h = window.location.hash.replace('#','');
-      const snapDate = document.getElementById('snap-date2').value;
-      const cFrom    = document.getElementById('cmp-from2').value;
-      const cTo      = document.getElementById('cmp-to2').value;
-      if (h==='snapshot') { showPage('snapshot'); if(!document.getElementById('snapshot-content').children.length) renderSnapshot(snapDate); }
-      else if (h==='compare') { showPage('compare'); if(!document.getElementById('compare-content').children.length) renderCompare(cFrom,cTo); }
-      else showPage('home');
+  const asOf=snapDate||new Date();
+  const keys=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(asOf.getFullYear(),asOf.getMonth()-i,1);
+    keys.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  }
+  const vals=keys.map(k=>byMonth[k]||0);
+  const mx=Math.max(...vals,1);
+
+  document.getElementById('vel-bar-chart').innerHTML=vals.map((v,i)=>`
+    <div class="bar-col">
+      <div class="bar-val">${v||''}</div>
+      <div class="bar-fill" style="height:${Math.max(v/mx*100,v>0?2:0)}%" title="${keys[i]}: ${v}"></div>
+    </div>`).join('');
+
+  document.getElementById('vel-bar-labels').innerHTML=keys.map(k=>{
+    const[y,m]=k.split('-');
+    return `<span class="bar-label">${MONTHS[+m-1]} ${y.slice(2)}</span>`;
+  }).join('');
+
+  // top 10
+  const byV={};
+  relFeats.forEach(f=>{
+    byV[f.version]=byV[f.version]||{v:f.version,d:f.release_date,feats:[]};
+    byV[f.version].feats.push(f);
+  });
+  const top10=Object.values(byV).sort((a,b)=>b.feats.length-a.feats.length).slice(0,10);
+  document.getElementById('vel-top-body').innerHTML=top10.map(r=>{
+    const nf=r.feats.filter(f=>f.category==='New Feature').length;
+    const uf=r.feats.filter(f=>f.category==='Undocumented Change').length;
+    return `<tr>
+      <td><code style="font-size:13px;color:#ccc">${r.v}</code></td>
+      <td style="font-size:13px">${r.d}</td>
+      <td style="font-weight:700">${r.feats.length}</td>
+      <td style="font-size:12px"><span style="color:#00933C">${nf} new</span><span style="color:#888;margin-left:8px">${uf} undoc</span></td>
+    </tr>`;
+  }).join('');
+
+  // category
+  const nf=relFeats.filter(f=>f.category==='New Feature').length;
+  const uf=relFeats.filter(f=>f.category==='Undocumented Change').length;
+  const tot=relFeats.length||1;
+  document.getElementById('vel-category').innerHTML=`
+    <div style="max-width:500px">
+      <div class="hbar-row"><div class="hbar-label">New Feature</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${nf/tot*100}%;background:#00933C"></div></div>
+        <div class="hbar-count">${nf}</div>
+      </div>
+      <div class="hbar-row"><div class="hbar-label">Undocumented Change</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${uf/tot*100}%;background:#808183"></div></div>
+        <div class="hbar-count">${uf}</div>
+      </div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════
+   COMPARE
+══════════════════════════════════════ */
+function renderCompare() {
+  const wf=D.features
+    .map(f=>({...f,_d:parseDate(f.release_date)}))
+    .filter(f=>{
+      if(!f._d)return false;
+      if(cmpFrom&&f._d<cmpFrom)return false;
+      if(cmpTo&&f._d>cmpTo)return false;
+      return f.lifecycle_status==='released'||f.lifecycle_status==='release_complete';
     });
 
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = '';
-  } catch(err) {
-    document.getElementById('loading').innerHTML = `
-      <div style="color:#EE352E;font-size:14px;font-weight:700">Failed to load data</div>
-      <div style="color:#555;font-size:12px;margin-top:8px">${err.message}</div>
-      <div style="color:#2a2a2a;font-size:11px;margin-top:4px">Ensure /data.json is accessible from this origin</div>
-    `;
+  const wr=D.releases
+    .map(r=>({...r,_d:parseDate(r.release_date)}))
+    .filter(r=>{
+      if(!r._d)return false;
+      if(cmpFrom&&r._d<cmpFrom)return false;
+      if(cmpTo&&r._d>cmpTo)return false;
+      return true;
+    });
+
+  // overall average
+  const allRel=D.features.filter(f=>f.lifecycle_status==='released'||f.lifecycle_status==='release_complete');
+  const sortedAll=D.releases.map(r=>({...r,_d:parseDate(r.release_date)})).filter(r=>r._d).sort((a,b)=>a._d-b._d);
+  const spanAll=sortedAll.length>=2?(sortedAll[sortedAll.length-1]._d-sortedAll[0]._d)/86400000:365;
+  const overallPM=spanAll>0?allRel.length/(spanAll/30):0;
+
+  const winDays=cmpFrom&&cmpTo?(cmpTo-cmpFrom)/86400000:spanAll||365;
+  const winPM=winDays>0?wf.length/(winDays/30):0;
+
+  const fsdInWin=wr.filter(r=>r.fsd_version).map(r=>r.fsd_version);
+  const fsdProg=fsdInWin.length?(fsdInWin[0]+' → '+fsdInWin[fsdInWin.length-1]):'—';
+
+  // summary
+  document.getElementById('cmp-stats').innerHTML=[
+    {n:wf.length, l:'Features Shipped'},
+    {n:wr.length, l:'Versions Released'},
+    {n:fsdProg,   l:'FSD Progression'},
+    {n:winPM.toFixed(1), l:'Features / Month'},
+  ].map(s=>`<div class="stat-box"><div class="stat-num" style="font-size:${String(s.n).length>8?'22px':'40px'}">${s.n}</div><div class="stat-label">${s.l}</div></div>`).join('');
+
+  const faster=winPM>=overallPM;
+  const pctD=overallPM>0?Math.abs(Math.round((winPM-overallPM)/overallPM*100)):0;
+  document.getElementById('cmp-velocity-card').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:13px;color:#888;margin-bottom:8px">Window Velocity vs Overall Average</div>
+        <div style="font-size:28px;font-weight:700">${winPM.toFixed(1)} <span style="font-size:14px;color:#888;font-weight:400">features/month</span></div>
+        <div style="font-size:13px;color:#888;margin-top:4px">Overall avg: ${overallPM.toFixed(1)} features/month</div>
+      </div>
+      <span class="vel-badge badge-${faster?'faster':'slower'}">${faster?'FASTER':'SLOWER'}${pctD>0?' '+pctD+'%':''}</span>
+    </div>`;
+
+  document.getElementById('cmp-ver-chips').innerHTML=wr.sort((a,b)=>a._d-b._d)
+    .map(r=>`<span class="ver-chip">${r.version}</span>`).join('')
+    ||'<span class="muted" style="font-size:13px">No versions in window</span>';
+
+  // features tab
+  const byG={};
+  wf.forEach(f=>{const gn=groupName(f.group_id);byG[gn]=(byG[gn]||0)+1;});
+  const sortedG=Object.entries(byG).sort((a,b)=>b[1]-a[1]);
+  const maxG=sortedG.length?sortedG[0][1]:1;
+  document.getElementById('cmp-group-bars').innerHTML=sortedG.map(([n,c])=>
+    `<div class="hbar-row">
+      <div class="hbar-label">${n}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${c/maxG*100}%;background:#0039A6"></div></div>
+      <div class="hbar-count">${c}</div>
+    </div>`
+  ).join('')||'<div class="muted" style="font-size:13px">No data</div>';
+
+  document.getElementById('cmp-feat-body').innerHTML=wf.map(f=>`<tr>
+    <td style="font-size:13px">${f.feature_name}</td>
+    <td style="font-size:13px;color:#888">${groupName(f.group_id)}</td>
+    <td style="font-size:13px">${engName(f.engineer_id)}</td>
+    <td style="font-size:12px;color:#888">${f.release_date}</td>
+    <td><span class="badge badge-${f.category==='Undocumented Change'?'planned':'released'}" style="font-size:10px">${f.category==='Undocumented Change'?'Undoc':'New'}</span></td>
+  </tr>`).join('')
+    ||'<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">No features in window</td></tr>';
+
+  // engineers tab
+  const byE={};
+  wf.forEach(f=>{byE[f.engineer_id]=byE[f.engineer_id]||[];byE[f.engineer_id].push(f);});
+  const sortedE=Object.entries(byE).sort((a,b)=>b[1].length-a[1].length);
+  const maxE=sortedE.length?sortedE[0][1].length:1;
+  document.getElementById('cmp-eng-section').innerHTML=sortedE.map(([eid,feats])=>{
+    const e=D.engineers.find(x=>x.engineer_id===eid);
+    const col=TEAM_COLORS[e?.team]||'#444';
+    return `<div>
+      <div class="hbar-row" style="cursor:pointer" onclick="toggleCmpEng('${eid}')">
+        <div class="hbar-label" style="color:${col}">${e?.name||eid}</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${feats.length/maxE*100}%;background:${col}"></div></div>
+        <div class="hbar-count">${feats.length}</div>
+      </div>
+      <div id="cmpeng-${eid}" style="display:none;padding:4px 0 12px 152px">
+        ${feats.map(f=>`<div style="font-size:12px;color:#888;padding:2px 0">${dotInline('released')}${f.feature_name}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')||'<div class="muted" style="font-size:13px">No data</div>';
+
+  // risks tab
+  document.getElementById('cmp-risk-body').innerHTML=D.risks.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:12px">${r.risk_id}</td>
+    <td style="font-size:13px;max-width:260px">${r.title}</td>
+    <td>${sevBadge(r.severity)}</td>
+    <td style="font-size:13px;color:#888">${r.probability}</td>
+    <td style="font-size:13px;color:#888">${r.impact}</td>
+    <td style="font-size:12px;color:#888">${r.owner_team}</td>
+    <td><span class="badge badge-${r.status}">${r.status}</span></td>
+  </tr>`).join('');
+}
+
+function toggleCmpEng(eid) {
+  const el=document.getElementById('cmpeng-'+eid);
+  if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+async function init() {
+  try {
+    const res = await fetch('/data.json');
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    D = await res.json();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#EE352E;font-size:15px;text-align:center">
+        Failed to load data.json<br><span style="color:#555;font-size:13px">${e.message}</span>
+       </div>`;
+    return;
   }
-})();
+  document.getElementById('loading').style.display='none';
+  renderHome();
+
+  const hash=(window.location.hash||'#home').replace('#','');
+  navigate(['home','snapshot','compare'].includes(hash)?hash:'home');
+
+  window.addEventListener('hashchange',()=>{
+    const h=window.location.hash.replace('#','');
+    if(['home','snapshot','compare'].includes(h)) navigate(h);
+  });
+}
+
+init();
 </script>
 </body>
 </html>
