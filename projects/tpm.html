@@ -950,7 +950,7 @@ function collapseDescendants(parentId) {
 /* TEAM */
 function renderTeam(features) {
   const teams=[...new Set(D.engineers.map(e=>e.team))];
-  let html=`<div class="org-tpm"><div class="org-tpm-node">TPM: Sarthak Jethi</div><div class="org-teams">`;
+  let html=`<div class="org-tpm"><div class="org-tpm-node">TPM</div><div class="org-teams">`;
   teams.forEach(team=>{
     const engs=D.engineers.filter(e=>e.team===team);
     const col=TEAM_COLORS[team]||'#444';
