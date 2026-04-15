@@ -519,9 +519,11 @@
       </div>
       <div class="tab-bar" id="cmp-tab-bar">
         <button class="tab-btn active" onclick="switchTab('cmp','summary',this)">Summary</button>
+        <button class="tab-btn" onclick="switchTab('cmp','roadmap',this)">Roadmap</button>
         <button class="tab-btn" onclick="switchTab('cmp','features',this)">Features</button>
-        <button class="tab-btn" onclick="switchTab('cmp','engineers',this)">Engineers</button>
+        <button class="tab-btn" onclick="switchTab('cmp','team',this)">Team</button>
         <button class="tab-btn" onclick="switchTab('cmp','risks',this)">Risks</button>
+        <button class="tab-btn" onclick="switchTab('cmp','velocity',this)">Velocity</button>
       </div>
     </div>
 
@@ -530,6 +532,36 @@
       <div class="card" id="cmp-velocity-card" style="margin-bottom:32px"></div>
       <div class="sec-title-sm">Versions Released in Window</div>
       <div id="cmp-ver-chips" style="padding-bottom:40px"></div>
+    </div>
+
+    <div id="cmp-tab-roadmap" class="tab-panel">
+      <div class="sec-title-sm">Versions Released in Window</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Version</th><th>Release Date</th><th>Feature Count</th><th>FSD Version</th></tr></thead>
+          <tbody id="cmp-roadmap-window-body"></tbody>
+        </table>
+      </div>
+      <div class="roadmap-split" style="margin-top:32px">
+        <div>
+          <div class="table-section-title">Last 8 Before Window</div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD Version</th></tr></thead>
+              <tbody id="cmp-roadmap-before-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="table-section-title">In Window</div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD Version</th></tr></thead>
+              <tbody id="cmp-roadmap-in-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="cmp-tab-features" class="tab-panel">
@@ -545,9 +577,17 @@
       </div>
     </div>
 
-    <div id="cmp-tab-engineers" class="tab-panel">
-      <div class="sec-title-sm">Features Shipped per Engineer</div>
-      <div id="cmp-eng-section" style="max-width:600px;padding-bottom:40px"></div>
+    <div id="cmp-tab-team" class="tab-panel">
+      <div id="cmp-org-chart" style="margin-bottom:32px"></div>
+      <div id="cmp-eng-detail-panel" class="eng-panel"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">Engineer Productivity in Window</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Team</th><th>Level</th><th>Shipped in Window</th><th>Total Released</th><th>Active</th></tr></thead>
+          <tbody id="cmp-team-roster-body"></tbody>
+        </table>
+      </div>
     </div>
 
     <div id="cmp-tab-risks" class="tab-panel">
@@ -558,6 +598,17 @@
           <tbody id="cmp-risk-body"></tbody>
         </table>
       </div>
+    </div>
+
+    <div id="cmp-tab-velocity" class="tab-panel">
+      <div class="sec-title">Features Shipped per Month (Window)</div>
+      <div class="bar-chart" id="cmp-vel-bar-chart"></div>
+      <div class="bar-labels-row" id="cmp-vel-bar-labels"></div>
+      <hr class="divider">
+      <div id="cmp-vel-comparison" style="margin-bottom:32px"></div>
+      <hr class="divider">
+      <div class="sec-title-sm">Features by Category</div>
+      <div id="cmp-vel-category"></div>
     </div>
   </div>
 </div>
@@ -1275,11 +1326,226 @@ function renderCompare() {
     <td style="font-size:12px;color:#888">${r.owner_team}</td>
     <td><span class="badge badge-${r.status}">${r.status}</span></td>
   </tr>`).join('');
+
+  renderCmpRoadmap(wf, wr);
+  renderCmpTeam(wf);
+  renderCmpVelocity(wf, winDays, winPM, overallPM);
 }
 
 function toggleCmpEng(eid) {
   const el=document.getElementById('cmpeng-'+eid);
   if(el) el.style.display=el.style.display==='none'?'block':'none';
+}
+
+/* ══════════════════════════════════════
+   COMPARE — ROADMAP TAB
+══════════════════════════════════════ */
+function renderCmpRoadmap(wf, wr) {
+  const byVer={};
+  D.features.forEach(f=>{byVer[f.version]=byVer[f.version]||[];byVer[f.version].push(f);});
+
+  const windowVers=wr.slice().sort((a,b)=>a._d-b._d);
+  document.getElementById('cmp-roadmap-window-body').innerHTML=windowVers.length===0
+    ?'<tr><td colspan="4" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
+    :windowVers.map(r=>`<tr>
+        <td><code style="font-size:13px;color:#fff">${r.version}</code></td>
+        <td style="font-size:13px">${fmtDate(r._d)}</td>
+        <td>${(byVer[r.version]||[]).length}</td>
+        <td style="font-size:12px;color:#888">${r.fsd_version||'—'}</td>
+      </tr>`).join('');
+
+  const beforeWindow=D.releases.map(r=>({...r,_d:parseDate(r.release_date)}))
+    .filter(r=>r._d&&(!cmpFrom||r._d<cmpFrom))
+    .sort((a,b)=>b._d-a._d).slice(0,8);
+
+  document.getElementById('cmp-roadmap-before-body').innerHTML=beforeWindow.map(r=>
+    `<tr>
+      <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
+      <td style="font-size:12px">${fmtDate(r._d)}</td>
+      <td>${(byVer[r.version]||[]).length}</td>
+      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
+    </tr>`
+  ).join('')||'<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+
+  document.getElementById('cmp-roadmap-in-body').innerHTML=windowVers.map(r=>
+    `<tr>
+      <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
+      <td style="font-size:12px">${fmtDate(r._d)}</td>
+      <td>${(byVer[r.version]||[]).length}</td>
+      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
+    </tr>`
+  ).join('')||'<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+}
+
+/* ══════════════════════════════════════
+   COMPARE — TEAM TAB
+══════════════════════════════════════ */
+function renderCmpTeam(wf) {
+  const teams=[...new Set(D.engineers.map(e=>e.team))];
+  let html=`<div class="org-tpm"><div class="org-tpm-node">TPM</div><div class="org-teams">`;
+  teams.forEach(team=>{
+    const engs=D.engineers.filter(e=>e.team===team);
+    const col=TEAM_COLORS[team]||'#444';
+    html+=`<div class="org-team">
+      <div class="org-team-node" style="background:${col}22;color:#fff;border:1px solid ${col}44"
+        onclick="highlightCmpTeam('${team}')" id="cmp-org-team-${team}">
+        ${TEAM_LABELS[team]||team}
+      </div>
+      <div class="org-engineers">`;
+    engs.forEach(e=>{
+      html+=`<div class="org-eng-card" id="cmp-org-eng-${e.engineer_id}" onclick="showCmpEngDetail('${e.engineer_id}',event)">
+        <div class="org-eng-name">${e.name.split(' ')[0]}</div>
+        <div class="org-eng-level">${lvl(e.seniority)}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  html+='</div></div>';
+  document.getElementById('cmp-org-chart').innerHTML=html;
+
+  const winShipped={};
+  wf.forEach(f=>{winShipped[f.engineer_id]=(winShipped[f.engineer_id]||0)+1;});
+  const allReleased={};
+  D.features.filter(f=>f.lifecycle_status==='released'||f.lifecycle_status==='release_complete')
+    .forEach(f=>{allReleased[f.engineer_id]=(allReleased[f.engineer_id]||0)+1;});
+  const activeFeats={};
+  D.features.filter(f=>['dev','fc','rc'].includes(computeStatus(f,null)))
+    .forEach(f=>{activeFeats[f.engineer_id]=(activeFeats[f.engineer_id]||0)+1;});
+
+  document.getElementById('cmp-team-roster-body').innerHTML=D.engineers.map(e=>`<tr>
+    <td style="font-weight:700">${e.name}</td>
+    <td><span style="color:#fff;font-size:13px">${TEAM_LABELS[e.team]||e.team}</span></td>
+    <td>${lvl(e.seniority)}</td>
+    <td style="font-weight:700">${winShipped[e.engineer_id]||0}</td>
+    <td style="color:#888">${allReleased[e.engineer_id]||0}</td>
+    <td>${activeFeats[e.engineer_id]||0}</td>
+  </tr>`).join('');
+}
+
+function highlightCmpTeam(team) {
+  document.querySelectorAll('#cmp-org-chart .org-team-node').forEach(n=>n.style.outline='');
+  document.getElementById('cmp-org-team-'+team).style.outline='2px solid #fff';
+  document.querySelectorAll('#cmp-org-chart .org-eng-card').forEach(c=>{
+    const eid=c.id.replace('cmp-org-eng-','');
+    const e=D.engineers.find(x=>x.engineer_id===eid);
+    c.style.opacity=e&&e.team===team?'1':'0.25';
+  });
+}
+
+function showCmpEngDetail(eid,ev) {
+  ev&&ev.stopPropagation();
+  const eng=D.engineers.find(e=>e.engineer_id===eid);
+  if(!eng)return;
+  document.querySelectorAll('#cmp-org-chart .org-eng-card').forEach(c=>c.classList.remove('eng-selected'));
+  document.getElementById('cmp-org-eng-'+eid)?.classList.add('eng-selected');
+
+  const winFeats=D.features
+    .map(f=>({...f,_d:parseDate(f.release_date)}))
+    .filter(f=>{
+      if(f.engineer_id!==eid)return false;
+      if(!f._d)return false;
+      if(cmpFrom&&f._d<cmpFrom)return false;
+      if(cmpTo&&f._d>cmpTo)return false;
+      return f.lifecycle_status==='released'||f.lifecycle_status==='release_complete';
+    });
+  const allFeats=D.features.filter(f=>f.engineer_id===eid&&(f.lifecycle_status==='released'||f.lifecycle_status==='release_complete'));
+
+  const panel=document.getElementById('cmp-eng-detail-panel');
+  panel.innerHTML=`
+    <div class="eng-panel-header">
+      <div>
+        <div class="eng-panel-name">${eng.name}</div>
+        <div class="eng-panel-meta" style="color:#888">${TEAM_LABELS[eng.team]||eng.team} · ${lvl(eng.seniority)} · ${eng.specialty}</div>
+      </div>
+      <button class="eng-panel-close" onclick="closeCmpEngPanel()">×</button>
+    </div>
+    <div class="eng-stats">
+      <div class="eng-stat"><div class="eng-stat-num">${winFeats.length}</div><div class="eng-stat-label">In Window</div></div>
+      <div class="eng-stat"><div class="eng-stat-num">${allFeats.length}</div><div class="eng-stat-label">Total Released</div></div>
+    </div>
+    <div class="sec-title-sm">Features Shipped in Window</div>
+    ${winFeats.length
+      ?winFeats.map(f=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #0d0d0d">
+          ${dotInline('released')}<span style="font-size:13px">${f.feature_name}</span>
+          <span style="font-size:11px;color:#888;margin-left:auto">${f.version}</span>
+        </div>`).join('')
+      :'<div class="muted" style="font-size:13px">No features in window</div>'}
+  `;
+  panel.classList.add('open');
+}
+
+function closeCmpEngPanel() {
+  document.getElementById('cmp-eng-detail-panel').classList.remove('open');
+  document.querySelectorAll('#cmp-org-chart .org-eng-card').forEach(c=>c.classList.remove('eng-selected'));
+}
+
+/* ══════════════════════════════════════
+   COMPARE — VELOCITY TAB
+══════════════════════════════════════ */
+function renderCmpVelocity(wf, winDays, winPM, overallPM) {
+  const byMonth={};
+  wf.forEach(f=>{
+    if(!f._d)return;
+    const k=f._d.getFullYear()+'-'+String(f._d.getMonth()+1).padStart(2,'0');
+    byMonth[k]=(byMonth[k]||0)+1;
+  });
+
+  const keys=[];
+  if(wf.length>0){
+    const startD=cmpFrom||wf.reduce((mn,f)=>f._d<mn?f._d:mn,wf[0]._d);
+    const endD=cmpTo||wf.reduce((mx,f)=>f._d>mx?f._d:mx,wf[0]._d);
+    let cur=new Date(startD.getFullYear(),startD.getMonth(),1);
+    const end=new Date(endD.getFullYear(),endD.getMonth(),1);
+    while(cur<=end){
+      keys.push(cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0'));
+      cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+    }
+  }
+
+  const vals=keys.map(k=>byMonth[k]||0);
+  const mx=Math.max(...vals,1);
+
+  document.getElementById('cmp-vel-bar-chart').innerHTML=vals.length
+    ?vals.map((v,i)=>`
+        <div class="bar-col">
+          <div class="bar-val">${v||''}</div>
+          <div class="bar-fill" style="height:${Math.max(v/mx*100,v>0?2:0)}%" title="${keys[i]}: ${v}"></div>
+        </div>`).join('')
+    :'<div class="muted" style="font-size:13px;padding:20px">No data in window</div>';
+
+  document.getElementById('cmp-vel-bar-labels').innerHTML=keys.map(k=>{
+    const[y,m]=k.split('-');
+    return `<span class="bar-label">${MONTHS[+m-1]} ${y.slice(2)}</span>`;
+  }).join('');
+
+  const faster=winPM>=overallPM;
+  const pctD=overallPM>0?Math.abs(Math.round((winPM-overallPM)/overallPM*100)):0;
+  document.getElementById('cmp-vel-comparison').innerHTML=`
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-size:13px;color:#888;margin-bottom:8px">Window Pace vs Overall Average</div>
+          <div style="font-size:28px;font-weight:700">${winPM.toFixed(1)} <span style="font-size:14px;color:#888;font-weight:400">features/month</span></div>
+          <div style="font-size:13px;color:#888;margin-top:4px">Overall avg: ${overallPM.toFixed(1)} features/month</div>
+        </div>
+        <span class="vel-badge badge-${faster?'faster':'slower'}">${faster?'FASTER':'SLOWER'}${pctD>0?' '+pctD+'%':''}</span>
+      </div>
+    </div>`;
+
+  const nf=wf.filter(f=>f.category==='New Feature').length;
+  const uf=wf.filter(f=>f.category==='Undocumented Change').length;
+  const tot=wf.length||1;
+  document.getElementById('cmp-vel-category').innerHTML=`
+    <div style="max-width:500px">
+      <div class="hbar-row"><div class="hbar-label">New Feature</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${nf/tot*100}%;background:#00933C"></div></div>
+        <div class="hbar-count">${nf}</div>
+      </div>
+      <div class="hbar-row"><div class="hbar-label">Undocumented Change</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${uf/tot*100}%;background:#808183"></div></div>
+        <div class="hbar-count">${uf}</div>
+      </div>
+    </div>`;
 }
 
 /* ══════════════════════════════════════
