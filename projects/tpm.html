@@ -91,17 +91,17 @@
       letter-spacing: 0.06em; text-transform: uppercase;
       padding: 3px 10px; border-radius: 100px;
     }
-    .badge-released { background: #00933C22; color: #00933C; }
-    .badge-rc { background: #0039A622; color: #4d8bff; }
-    .badge-fc { background: #FF631922; color: #FF6319; }
-    .badge-dev { background: #FF631922; color: #FF6319; }
+    .badge-released { background: #00933C22; color: #fff; }
+    .badge-rc { background: #0039A622; color: #fff; }
+    .badge-fc { background: #FF631922; color: #fff; }
+    .badge-dev { background: #FF631922; color: #fff; }
     .badge-planned { background: #44444422; color: #888; }
-    .badge-critical { background: #EE352E33; color: #EE352E; }
-    .badge-high { background: #FF631933; color: #FF6319; }
-    .badge-medium { background: #FCCC0A33; color: #FCCC0A; }
+    .badge-critical { background: #EE352E33; color: #fff; }
+    .badge-high { background: #FF631933; color: #fff; }
+    .badge-medium { background: #FCCC0A33; color: #fff; }
     .badge-low { background: #44444433; color: #888; }
-    .badge-open { background: #EE352E22; color: #EE352E; }
-    .badge-resolved { background: #00933C22; color: #00933C; }
+    .badge-open { background: #EE352E22; color: #fff; }
+    .badge-resolved { background: #00933C22; color: #fff; }
 
     /* subway dot */
     .dot {
@@ -133,9 +133,9 @@
     .data-table tr.row-subgroup { background: #0d0d0d; cursor: pointer; }
     .data-table tr.row-subgroup td:first-child { padding-left: 32px; }
     .data-table tr.row-feature td:first-child { padding-left: 56px; }
-    .data-table tr.row-feature td { color: #ccc; }
+    .data-table tr.row-feature td { color: #fff; }
     .expand-icon {
-      margin-right: 8px; font-size: 11px; color: #555;
+      margin-right: 8px; font-size: 11px; color: #888;
       transition: transform 0.15s; display: inline-block; width: 12px;
     }
     .row-expanded .expand-icon { transform: rotate(90deg); }
@@ -152,7 +152,7 @@
       outline: none; transition: border-color 0.15s;
     }
     input[type="text"]:focus { border-color: #555; }
-    input[type="text"]::placeholder { color: #555; }
+    input[type="text"]::placeholder { color: #888; }
 
     .btn {
       background: #fff; color: #000; border: none; border-radius: 10px;
@@ -185,7 +185,7 @@
     .home-card-title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
     .home-card-desc { font-size: 15px; color: #888; margin-bottom: 24px; line-height: 1.7; }
     .input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .hint { font-size: 13px; color: #555; margin-top: 40px; text-align: center; padding-bottom: 60px; }
+    .hint { font-size: 13px; color: #888; margin-top: 40px; text-align: center; padding-bottom: 60px; }
 
     /* ── SNAPSHOT PAGE ── */
     .snap-header { padding: 40px 0 0; }
@@ -250,7 +250,7 @@
     .eng-panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
     .eng-panel-name { font-size: 20px; font-weight: 700; }
     .eng-panel-meta { font-size: 13px; color: #888; margin-top: 4px; }
-    .eng-panel-close { background: none; border: none; color: #555; font-size: 22px; cursor: pointer; line-height: 1; }
+    .eng-panel-close { background: none; border: none; color: #888; font-size: 22px; cursor: pointer; line-height: 1; }
     .eng-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
     .eng-stat { background: #0d0d0d; border-radius: 10px; padding: 14px 18px; }
     .eng-stat-num { font-size: 24px; font-weight: 700; }
@@ -276,7 +276,7 @@
     .bar-fill:hover { opacity: 0.8; }
     .bar-val { font-size: 10px; color: #888; margin-bottom: 3px; }
     .bar-labels-row { display: flex; gap: 6px; margin-bottom: 28px; }
-    .bar-label { flex: 1; text-align: center; font-size: 10px; color: #555; }
+    .bar-label { flex: 1; text-align: center; font-size: 10px; color: #888; }
 
     /* hbar */
     .hbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -289,11 +289,11 @@
     .compare-header { padding: 40px 0 0; }
     .compare-header h2 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
     .compare-input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
-    .compare-sep { color: #555; font-size: 14px; }
+    .compare-sep { color: #888; font-size: 14px; }
     .vel-badge { display: inline-block; border-radius: 100px; padding: 4px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
-    .badge-faster { background: #00933C22; color: #00933C; }
-    .badge-slower { background: #EE352E22; color: #EE352E; }
-    .ver-chip { display: inline-block; background: #111; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-family: monospace; margin: 3px; color: #ccc; }
+    .badge-faster { background: #00933C22; color: #fff; }
+    .badge-slower { background: #EE352E22; color: #fff; }
+    .ver-chip { display: inline-block; background: #111; border-radius: 8px; padding: 4px 12px; font-size: 12px; font-family: monospace; margin: 3px; color: #fff; }
 
     /* misc */
     .sec-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
@@ -470,7 +470,7 @@
     <!-- Risks -->
     <div id="snap-tab-risks" class="tab-panel">
       <div class="sec-title">Risk Heatmap</div>
-      <div style="font-size:12px;color:#555;margin-bottom:12px">Rows: Probability (High → Low) · Columns: Impact (Low → High)</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px">Rows: Probability (High → Low) · Columns: Impact (Low → High)</div>
       <div class="heatmap" id="risk-heatmap"></div>
       <hr class="divider">
       <div class="sec-title-sm">Risk Register</div>
@@ -835,7 +835,7 @@ function renderRoadmap(features) {
         const rel=vf.filter(f=>f._status==='released').length;
         const pct=vf.length?Math.round(rel/vf.length*100):100;
         return `<tr>
-          <td><code style="font-size:13px;color:#ccc">${r.version}</code></td>
+          <td><code style="font-size:13px;color:#fff">${r.version}</code></td>
           <td style="font-size:13px">${fmtDate(r._d)}</td>
           <td>${vf.length}</td>
           <td><span style="font-size:12px;color:#888">${r.fsd_version||'—'}</span></td>
@@ -849,7 +849,7 @@ function renderRoadmap(features) {
   const recent = allRels.filter(r=>r._d&&r._d<=asOf).sort((a,b)=>b._d-a._d).slice(0,8);
   document.getElementById('roadmap-recent-body').innerHTML = recent.map(r=>
     `<tr>
-      <td><code style="font-size:12px;color:#ccc">${r.version}</code></td>
+      <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
       <td>${(byVer[r.version]||[]).length}</td>
       <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
@@ -859,7 +859,7 @@ function renderRoadmap(features) {
   const upcoming = allRels.filter(r=>r._d&&r._d>asOf).sort((a,b)=>a._d-b._d).slice(0,8);
   document.getElementById('roadmap-upcoming-body').innerHTML = upcoming.map(r=>
     `<tr>
-      <td><code style="font-size:12px;color:#ccc">${r.version}</code></td>
+      <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
       <td>${(byVer[r.version]||[]).length}</td>
       <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
@@ -885,9 +885,9 @@ function renderFeatures(features) {
     rows+=`<tr class="row-group" id="${gid_s}" onclick="toggleRows('${gid_s}')">
       <td><span class="expand-icon" id="ei-${gid_s}">▶</span>${groupName(gid)}</td>
       <td></td><td></td><td></td><td></td>
-      <td style="color:#555">${gc.planned}</td><td style="color:#FF6319">${gc.dev}</td>
-      <td style="color:#FF6319">${gc.fc}</td><td style="color:#0039A6">${gc.rc}</td>
-      <td style="color:#00933C">${gc.released}</td>
+      <td style="color:#888">${gc.planned}</td><td style="color:#fff">${gc.dev}</td>
+      <td style="color:#fff">${gc.fc}</td><td style="color:#fff">${gc.rc}</td>
+      <td style="color:#fff">${gc.released}</td>
     </tr>`;
 
     Object.keys(byGroup[gid]).sort((a,b)=>+a-+b).forEach(sgid=>{
@@ -897,9 +897,9 @@ function renderFeatures(features) {
       rows+=`<tr class="row-subgroup" id="${sgid_s}" data-parent="${gid_s}" style="display:none" onclick="toggleRows('${sgid_s}')">
         <td><span class="expand-icon" id="ei-${sgid_s}">▶</span>${subgroupName(sgid)}</td>
         <td></td><td></td><td></td><td></td>
-        <td style="color:#555">${sc.planned}</td><td style="color:#FF6319">${sc.dev}</td>
-        <td style="color:#FF6319">${sc.fc}</td><td style="color:#0039A6">${sc.rc}</td>
-        <td style="color:#00933C">${sc.released}</td>
+        <td style="color:#888">${sc.planned}</td><td style="color:#fff">${sc.dev}</td>
+        <td style="color:#fff">${sc.fc}</td><td style="color:#fff">${sc.rc}</td>
+        <td style="color:#fff">${sc.released}</td>
       </tr>`;
 
       sgFeats.forEach(f=>{
@@ -955,7 +955,7 @@ function renderTeam(features) {
     const engs=D.engineers.filter(e=>e.team===team);
     const col=TEAM_COLORS[team]||'#444';
     html+=`<div class="org-team">
-      <div class="org-team-node" style="background:${col}22;color:${col};border:1px solid ${col}44"
+      <div class="org-team-node" style="background:${col}22;color:#fff;border:1px solid ${col}44"
         onclick="highlightTeam('${team}')" id="org-team-${team}">
         ${TEAM_LABELS[team]||team}
       </div>
@@ -981,7 +981,7 @@ function renderTeam(features) {
     const col=TEAM_COLORS[e.team]||'#444';
     return `<tr>
       <td style="font-weight:700">${e.name}</td>
-      <td><span style="color:${col};font-size:13px">${TEAM_LABELS[e.team]||e.team}</span></td>
+      <td><span style="color:#fff;font-size:13px">${TEAM_LABELS[e.team]||e.team}</span></td>
       <td>${lvl(e.seniority)}</td>
       <td style="font-size:13px;color:#888">${e.specialty}</td>
       <td>${engAct[e.engineer_id]||0}</td>
@@ -1021,7 +1021,7 @@ function showEngDetail(eid,ev) {
     <div class="eng-panel-header">
       <div>
         <div class="eng-panel-name">${eng.name}</div>
-        <div class="eng-panel-meta" style="color:${col}">${TEAM_LABELS[eng.team]||eng.team} · ${lvl(eng.seniority)} · ${eng.specialty}</div>
+        <div class="eng-panel-meta" style="color:#888">${TEAM_LABELS[eng.team]||eng.team} · ${lvl(eng.seniority)} · ${eng.specialty}</div>
       </div>
       <button class="eng-panel-close" onclick="closeEngPanel()">×</button>
     </div>
@@ -1141,10 +1141,10 @@ function renderVelocity(features) {
     const nf=r.feats.filter(f=>f.category==='New Feature').length;
     const uf=r.feats.filter(f=>f.category==='Undocumented Change').length;
     return `<tr>
-      <td><code style="font-size:13px;color:#ccc">${r.v}</code></td>
+      <td><code style="font-size:13px;color:#fff">${r.v}</code></td>
       <td style="font-size:13px">${r.d}</td>
       <td style="font-weight:700">${r.feats.length}</td>
-      <td style="font-size:12px"><span style="color:#00933C">${nf} new</span><span style="color:#888;margin-left:8px">${uf} undoc</span></td>
+      <td style="font-size:12px"><span style="color:#fff">${nf} new</span><span style="color:#888;margin-left:8px">${uf} undoc</span></td>
     </tr>`;
   }).join('');
 
@@ -1255,7 +1255,7 @@ function renderCompare() {
     const col=TEAM_COLORS[e?.team]||'#444';
     return `<div>
       <div class="hbar-row" style="cursor:pointer" onclick="toggleCmpEng('${eid}')">
-        <div class="hbar-label" style="color:${col}">${e?.name||eid}</div>
+        <div class="hbar-label" style="color:#fff">${e?.name||eid}</div>
         <div class="hbar-track"><div class="hbar-fill" style="width:${feats.length/maxE*100}%;background:${col}"></div></div>
         <div class="hbar-count">${feats.length}</div>
       </div>
@@ -1292,8 +1292,8 @@ async function init() {
     D = await res.json();
   } catch(e) {
     document.getElementById('loading').innerHTML =
-      `<div style="color:#EE352E;font-size:15px;text-align:center">
-        Failed to load data.json<br><span style="color:#555;font-size:13px">${e.message}</span>
+      `<div style="color:#fff;font-size:15px;text-align:center">
+        Failed to load data.json<br><span style="color:#888;font-size:13px">${e.message}</span>
        </div>`;
     return;
   }
