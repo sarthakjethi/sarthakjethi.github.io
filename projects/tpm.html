@@ -605,7 +605,6 @@
 <!-- ═══════════════════════ VERSIONS PAGE ═══════════════════════ -->
 <div id="page-versions" class="page">
   <div class="container" style="padding-top:32px;padding-bottom:60px">
-    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
     <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Software Versions</h2>
     <div class="card" style="margin-bottom:24px">
       <p style="font-size:15px;color:#ccc;line-height:1.7">A software version is a numbered release of Tesla's vehicle software, pushed over-the-air (OTA) to cars. Each version contains a set of new features, bug fixes, or undocumented changes. Versions follow a YEAR.WEEK.PATCH format — for example, 2024.26.3 means the third patch of week 26 in 2024. This dataset covers 118 versions released between January 2023 and April 2026.</p>
@@ -625,7 +624,6 @@
 <!-- ═══════════════════════ FEATURES PAGE ═══════════════════════ -->
 <div id="page-features" class="page">
   <div class="container" style="padding-top:32px;padding-bottom:60px">
-    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
     <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Features</h2>
     <div class="card" style="margin-bottom:24px">
       <p style="font-size:15px;color:#ccc;line-height:1.7">A feature is a specific capability or improvement included in a software version. Features range from new Autopilot behaviors to UI changes, navigation updates, and hardware improvements. Each feature has a lifecycle: it starts in development, becomes feature complete when engineering is done, release complete when it passes validation, and finally released when it ships to customers. This dataset tracks 1,782 features across 7 groups and 20 subgroups.</p>
@@ -644,7 +642,6 @@
 <!-- ═══════════════════════ ENGINEERS PAGE ═══════════════════════ -->
 <div id="page-engineers" class="page">
   <div class="container" style="padding-top:32px;padding-bottom:60px">
-    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
     <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Engineers</h2>
     <div class="card" style="margin-bottom:24px">
       <p style="font-size:15px;color:#ccc;line-height:1.7">The 10 engineers in this dashboard are simulated roles based on realistic Tesla engineering team structures. They are not real Tesla employees. Each engineer is assigned to a team and owns a set of features across the dataset. Seniority levels follow Tesla's engineering ladder: L3 (junior), L4 (mid-level), L5 (senior).</p>
@@ -663,7 +660,6 @@
 <!-- ═══════════════════════ RISKS PAGE ═══════════════════════ -->
 <div id="page-risks" class="page">
   <div class="container" style="padding-top:32px;padding-bottom:60px">
-    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
     <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Risk Register</h2>
     <div class="card" style="margin-bottom:24px">
       <p style="font-size:15px;color:#ccc;line-height:1.7">Risks are potential issues that could affect the quality, timeline, or safety of the software program. Each risk has a severity (Critical, High, Medium), probability (how likely it is to occur), and impact (how bad it would be). Risks were identified by analyzing patterns in the release data — such as recurring OTA recalls, junior engineers owning safety-critical code, and rapid release cadence creating regression pressure. These are simulated risks for educational purposes.</p>
@@ -779,7 +775,7 @@ function lvl(sen) { return sen==='junior'?'L3':sen==='mid'?'L4':sen==='senior'?'
 /* ══════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════ */
-function navigate(page) {
+function showPageOnly(page) {
   ['home','snapshot','compare','versions','features','engineers','risks'].forEach(p => {
     const el = document.getElementById('page-'+p);
     if (el) el.classList.toggle('active', p===page);
@@ -787,7 +783,6 @@ function navigate(page) {
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
   if (page==='snapshot') document.getElementById('nav-snapshot').classList.add('active');
   if (page==='compare')  document.getElementById('nav-compare').classList.add('active');
-  history.replaceState(null,'','#'+page);
   if (page==='snapshot')  renderSnapshot();
   if (page==='compare')   renderCompare();
   if (page==='versions')  renderVersionsPage();
@@ -796,7 +791,20 @@ function navigate(page) {
   if (page==='risks')     renderRisksPage();
 }
 
+function navigate(page) {
+  showPageOnly(page);
+  history.pushState({ page: page }, '', '#' + page);
+}
+
 function showPage(page) { navigate(page); }
+
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.page) {
+    showPageOnly(e.state.page);
+  } else {
+    showPageOnly('home');
+  }
+});
 
 function switchTab(prefix, name, btn) {
   const bar = document.getElementById(prefix+'-tab-bar');
@@ -1737,13 +1745,11 @@ async function init() {
   document.getElementById('loading').style.display='none';
   renderHome();
 
-  const hash=(window.location.hash||'#home').replace('#','');
-  navigate(['home','snapshot','compare'].includes(hash)?hash:'home');
-
-  window.addEventListener('hashchange',()=>{
-    const h=window.location.hash.replace('#','');
-    if(['home','snapshot','compare'].includes(h)) navigate(h);
-  });
+  const allPages = ['home','snapshot','compare','versions','features','engineers','risks'];
+  const hash = (window.location.hash || '#home').replace('#','');
+  const startPage = allPages.includes(hash) ? hash : 'home';
+  showPageOnly(startPage);
+  history.replaceState({ page: startPage }, '', '#' + startPage);
 }
 
 init();
