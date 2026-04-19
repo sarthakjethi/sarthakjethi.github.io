@@ -316,11 +316,11 @@
 
 <!-- NAV -->
 <nav class="tpm-nav">
-  <a href="#home" class="nav-brand" onclick="navigate('home');return false;">
+  <a href="#home" class="nav-brand" onclick="showPage('home');return false;">
     <span style="color:#EE352E">●</span> TPM Dashboard
   </a>
   <div class="nav-links">
-    <a href="/">Home</a>
+    <a href="#home" onclick="showPage('home');return false;">Home</a>
     <a href="#snapshot" id="nav-snapshot" onclick="navigate('snapshot');return false;">Snapshot</a>
     <a href="#compare" id="nav-compare" onclick="navigate('compare');return false;">Compare</a>
   </div>
@@ -338,6 +338,7 @@
     <div class="home-hero">
       <h1>TPM Dashboard</h1>
       <p class="subtitle">Tesla Vehicle Software Updates · January 2023 – April 2026</p>
+      <p style="font-size:13px;color:#888888;margin-top:8px;text-align:center">This dashboard is a simulation built on public Tesla release notes. It does not represent real internal Tesla data, teams, or processes.</p>
 
       <div class="stat-row" id="home-stats"></div>
     </div>
@@ -398,7 +399,7 @@
       <div class="sec-title">In Flight</div>
       <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD</th><th style="min-width:160px">Progress</th></tr></thead>
+          <thead><tr><th>Version</th><th>Release Date</th><th style="min-width:160px">Progress</th></tr></thead>
           <tbody id="roadmap-inflight-body"></tbody>
         </table>
       </div>
@@ -407,7 +408,7 @@
           <div class="table-section-title" style="margin-top:28px">Recently Released</div>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Version</th><th>Date</th><th>Features</th><th>FSD</th></tr></thead>
+              <thead><tr><th>Version</th><th>Date</th></tr></thead>
               <tbody id="roadmap-recent-body"></tbody>
             </table>
           </div>
@@ -416,7 +417,7 @@
           <div class="table-section-title" style="margin-top:28px">Upcoming</div>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Version</th><th>Date</th><th>Features</th><th>FSD</th></tr></thead>
+              <thead><tr><th>Version</th><th>Date</th></tr></thead>
               <tbody id="roadmap-upcoming-body"></tbody>
             </table>
           </div>
@@ -523,7 +524,7 @@
       <div class="sec-title-sm">Versions Released in Window</div>
       <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>Version</th><th>Release Date</th><th>Feature Count</th><th>FSD Version</th></tr></thead>
+          <thead><tr><th>Version</th><th>Release Date</th></tr></thead>
           <tbody id="cmp-roadmap-window-body"></tbody>
         </table>
       </div>
@@ -532,7 +533,7 @@
           <div class="table-section-title">Last 8 Before Window</div>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD Version</th></tr></thead>
+              <thead><tr><th>Version</th><th>Release Date</th></tr></thead>
               <tbody id="cmp-roadmap-before-body"></tbody>
             </table>
           </div>
@@ -541,7 +542,7 @@
           <div class="table-section-title">In Window</div>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Version</th><th>Release Date</th><th>Features</th><th>FSD Version</th></tr></thead>
+              <thead><tr><th>Version</th><th>Release Date</th></tr></thead>
               <tbody id="cmp-roadmap-in-body"></tbody>
             </table>
           </div>
@@ -597,6 +598,78 @@
       <hr class="divider">
       <div class="sec-title-sm">Features by Category</div>
       <div id="cmp-vel-category"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ VERSIONS PAGE ═══════════════════════ -->
+<div id="page-versions" class="page">
+  <div class="container" style="padding-top:32px;padding-bottom:60px">
+    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
+    <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Software Versions</h2>
+    <div class="card" style="margin-bottom:24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.7">A software version is a numbered release of Tesla's vehicle software, pushed over-the-air (OTA) to cars. Each version contains a set of new features, bug fixes, or undocumented changes. Versions follow a YEAR.WEEK.PATCH format — for example, 2024.26.3 means the third patch of week 26 in 2024. This dataset covers 118 versions released between January 2023 and April 2026.</p>
+    </div>
+    <div class="card">
+      <input type="text" id="versions-search" placeholder="Search versions…" style="background:#000;border:1px solid #444;color:#fff;padding:10px 14px;width:100%;margin-bottom:16px;border-radius:10px;font-size:14px;outline:none;font-family:'Helvetica Neue',Helvetica,sans-serif">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Version</th><th>Release Date</th><th>Feature Count</th></tr></thead>
+          <tbody id="versions-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ FEATURES PAGE ═══════════════════════ -->
+<div id="page-features" class="page">
+  <div class="container" style="padding-top:32px;padding-bottom:60px">
+    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
+    <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Features</h2>
+    <div class="card" style="margin-bottom:24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.7">A feature is a specific capability or improvement included in a software version. Features range from new Autopilot behaviors to UI changes, navigation updates, and hardware improvements. Each feature has a lifecycle: it starts in development, becomes feature complete when engineering is done, release complete when it passes validation, and finally released when it ships to customers. This dataset tracks 1,782 features across 7 groups and 20 subgroups.</p>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Group</th><th>Subgroups</th><th>Total Features</th><th>% of Total</th></tr></thead>
+          <tbody id="features-page-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ENGINEERS PAGE ═══════════════════════ -->
+<div id="page-engineers" class="page">
+  <div class="container" style="padding-top:32px;padding-bottom:60px">
+    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
+    <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Engineers</h2>
+    <div class="card" style="margin-bottom:24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.7">The 10 engineers in this dashboard are simulated roles based on realistic Tesla engineering team structures. They are not real Tesla employees. Each engineer is assigned to a team and owns a set of features across the dataset. Seniority levels follow Tesla's engineering ladder: L3 (junior), L4 (mid-level), L5 (senior).</p>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Team</th><th>Level</th><th>Specialty</th><th>Total Features</th><th>Released Features</th></tr></thead>
+          <tbody id="engineers-page-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ RISKS PAGE ═══════════════════════ -->
+<div id="page-risks" class="page">
+  <div class="container" style="padding-top:32px;padding-bottom:60px">
+    <button onclick="showPage('home')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:'Helvetica Neue',Helvetica,sans-serif;padding:0">← Back to Dashboard</button>
+    <h2 style="font-size:32px;font-weight:700;margin-bottom:32px">Risk Register</h2>
+    <div class="card" style="margin-bottom:24px">
+      <p style="font-size:15px;color:#ccc;line-height:1.7">Risks are potential issues that could affect the quality, timeline, or safety of the software program. Each risk has a severity (Critical, High, Medium), probability (how likely it is to occur), and impact (how bad it would be). Risks were identified by analyzing patterns in the release data — such as recurring OTA recalls, junior engineers owning safety-critical code, and rapid release cadence creating regression pressure. These are simulated risks for educational purposes.</p>
+    </div>
+    <div class="card">
+      <div id="risks-page-cards"></div>
     </div>
   </div>
 </div>
@@ -707,16 +780,23 @@ function lvl(sen) { return sen==='junior'?'L3':sen==='mid'?'L4':sen==='senior'?'
    NAVIGATION
 ══════════════════════════════════════ */
 function navigate(page) {
-  ['home','snapshot','compare'].forEach(p =>
-    document.getElementById('page-'+p).classList.toggle('active', p===page)
-  );
+  ['home','snapshot','compare','versions','features','engineers','risks'].forEach(p => {
+    const el = document.getElementById('page-'+p);
+    if (el) el.classList.toggle('active', p===page);
+  });
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
   if (page==='snapshot') document.getElementById('nav-snapshot').classList.add('active');
   if (page==='compare')  document.getElementById('nav-compare').classList.add('active');
   history.replaceState(null,'','#'+page);
-  if (page==='snapshot') renderSnapshot();
-  if (page==='compare')  renderCompare();
+  if (page==='snapshot')  renderSnapshot();
+  if (page==='compare')   renderCompare();
+  if (page==='versions')  renderVersionsPage();
+  if (page==='features')  renderFeaturesPage();
+  if (page==='engineers') renderEngineersPage();
+  if (page==='risks')     renderRisksPage();
 }
+
+function showPage(page) { navigate(page); }
 
 function switchTab(prefix, name, btn) {
   const bar = document.getElementById(prefix+'-tab-bar');
@@ -780,11 +860,11 @@ function applyCompare() {
 ══════════════════════════════════════ */
 function renderHome() {
   document.getElementById('home-stats').innerHTML = [
-    {n:D.releases.length, l:'Versions'},
-    {n:D.features.length, l:'Features'},
-    {n:D.engineers.length, l:'Engineers'},
-    {n:D.risks.length,    l:'Risks'},
-  ].map(x=>`<div class="stat-box"><div class="stat-num">${x.n}</div><div class="stat-label">${x.l}</div></div>`).join('');
+    {n:D.releases.length, l:'Versions',  page:'versions'},
+    {n:D.features.length, l:'Features',  page:'features'},
+    {n:D.engineers.length,l:'Engineers', page:'engineers'},
+    {n:D.risks.length,    l:'Risks',     page:'risks'},
+  ].map(x=>`<div class="stat-box" onclick="showPage('${x.page}')" style="cursor:pointer"><div class="stat-num">${x.n}</div><div class="stat-label">${x.l}</div></div>`).join('');
 }
 
 /* ══════════════════════════════════════
@@ -868,7 +948,7 @@ function renderRoadmap(features) {
 
   document.getElementById('roadmap-inflight-body').innerHTML =
     inFlight.length===0
-    ? '<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
+    ? '<tr><td colspan="3" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
     : inFlight.map(r=>{
         const vf=byVer[r.version]||[];
         const rel=vf.filter(f=>f._status==='released').length;
@@ -876,8 +956,6 @@ function renderRoadmap(features) {
         return `<tr>
           <td><code style="font-size:13px;color:#fff">${r.version}</code></td>
           <td style="font-size:13px">${fmtDate(r._d)}</td>
-          <td>${vf.length}</td>
-          <td><span style="font-size:12px;color:#888">${r.fsd_version||'—'}</span></td>
           <td><div style="display:flex;align-items:center;gap:8px">
             <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
             <span style="font-size:12px;color:#888">${pct}%</span>
@@ -890,20 +968,16 @@ function renderRoadmap(features) {
     `<tr>
       <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
-      <td>${(byVer[r.version]||[]).length}</td>
-      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
     </tr>`
-  ).join('') || '<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+  ).join('') || '<tr><td colspan="2" class="muted" style="padding:12px">None</td></tr>';
 
   const upcoming = allRels.filter(r=>r._d&&r._d>asOf).sort((a,b)=>a._d-b._d).slice(0,8);
   document.getElementById('roadmap-upcoming-body').innerHTML = upcoming.map(r=>
     `<tr>
       <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
-      <td>${(byVer[r.version]||[]).length}</td>
-      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
     </tr>`
-  ).join('') || '<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+  ).join('') || '<tr><td colspan="2" class="muted" style="padding:12px">None</td></tr>';
 }
 
 /* FEATURES (expandable hierarchy) */
@@ -1334,12 +1408,10 @@ function renderCmpRoadmap(wf, wr) {
 
   const windowVers=wr.slice().sort((a,b)=>a._d-b._d);
   document.getElementById('cmp-roadmap-window-body').innerHTML=windowVers.length===0
-    ?'<tr><td colspan="4" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
+    ?'<tr><td colspan="2" class="muted" style="padding:20px;text-align:center">No versions in window</td></tr>'
     :windowVers.map(r=>`<tr>
         <td><code style="font-size:13px;color:#fff">${r.version}</code></td>
         <td style="font-size:13px">${fmtDate(r._d)}</td>
-        <td>${(byVer[r.version]||[]).length}</td>
-        <td style="font-size:12px;color:#888">${r.fsd_version||'—'}</td>
       </tr>`).join('');
 
   const beforeWindow=D.releases.map(r=>({...r,_d:parseDate(r.release_date)}))
@@ -1350,19 +1422,15 @@ function renderCmpRoadmap(wf, wr) {
     `<tr>
       <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
-      <td>${(byVer[r.version]||[]).length}</td>
-      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
     </tr>`
-  ).join('')||'<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+  ).join('')||'<tr><td colspan="2" class="muted" style="padding:12px">None</td></tr>';
 
   document.getElementById('cmp-roadmap-in-body').innerHTML=windowVers.map(r=>
     `<tr>
       <td><code style="font-size:12px;color:#fff">${r.version}</code></td>
       <td style="font-size:12px">${fmtDate(r._d)}</td>
-      <td>${(byVer[r.version]||[]).length}</td>
-      <td style="font-size:11px;color:#888">${r.fsd_version||'—'}</td>
     </tr>`
-  ).join('')||'<tr><td colspan="4" class="muted" style="padding:12px">None</td></tr>';
+  ).join('')||'<tr><td colspan="2" class="muted" style="padding:12px">None</td></tr>';
 }
 
 /* ══════════════════════════════════════
@@ -1534,6 +1602,121 @@ function renderCmpVelocity(wf, winDays, winPM, overallPM) {
         <div class="hbar-count">${uf}</div>
       </div>
     </div>`;
+}
+
+/* ══════════════════════════════════════
+   STAT DETAIL PAGES
+══════════════════════════════════════ */
+function goSnapshotVersion(version) {
+  document.getElementById('snap-date-input').value = version;
+  snapDate = resolveInput(version);
+  document.getElementById('snap-date-display').textContent =
+    snapDate ? 'As of: '+fmtDate(snapDate) : 'Showing full dataset';
+  navigate('snapshot');
+}
+
+function renderVersionsPage() {
+  if (!D) return;
+  const byVer = {};
+  D.features.forEach(f => { byVer[f.version] = (byVer[f.version]||0)+1; });
+  const sorted = D.releases.slice().sort((a,b) => {
+    const da=parseDate(a.release_date), db=parseDate(b.release_date);
+    if (!da&&!db) return 0; if (!da) return 1; if (!db) return -1;
+    return db-da;
+  });
+  document.getElementById('versions-table-body').innerHTML = sorted.map(r=>
+    `<tr style="cursor:pointer" onclick="goSnapshotVersion('${r.version}')">
+      <td><code style="font-size:13px;color:#fff">${r.version}</code></td>
+      <td style="font-size:13px">${r.release_date||'—'}</td>
+      <td>${byVer[r.version]||0}</td>
+    </tr>`
+  ).join('');
+  const searchEl = document.getElementById('versions-search');
+  searchEl.value = '';
+  searchEl.oninput = function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#versions-table-body tr').forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  };
+}
+
+function renderFeaturesPage() {
+  if (!D) return;
+  const total = D.features.length || 1;
+  const byGroup = {};
+  D.features.forEach(f => {
+    if (!byGroup[f.group_id]) byGroup[f.group_id] = {};
+    byGroup[f.group_id][f.subgroup_id] = (byGroup[f.group_id][f.subgroup_id]||0)+1;
+  });
+  let rows = '';
+  Object.keys(byGroup).sort((a,b)=>+a-+b).forEach(gid => {
+    const subs = byGroup[gid];
+    const groupTotal = Object.values(subs).reduce((s,c)=>s+c, 0);
+    const pct = (groupTotal/total*100).toFixed(1);
+    const sgNames = Object.keys(subs).sort((a,b)=>+a-+b).map(sgid=>subgroupName(sgid)).join(', ');
+    rows += `<tr style="background:#111">
+      <td style="font-weight:700">${groupName(gid)}</td>
+      <td style="font-size:12px;color:#888">${sgNames}</td>
+      <td style="font-weight:700">${groupTotal}</td>
+      <td style="color:#888">${pct}%</td>
+    </tr>`;
+    Object.keys(subs).sort((a,b)=>+a-+b).forEach(sgid => {
+      rows += `<tr style="background:#0d0d0d">
+        <td style="padding-left:32px;color:#888;font-size:13px">${subgroupName(sgid)}</td>
+        <td></td>
+        <td style="color:#888;font-size:13px">${subs[sgid]}</td>
+        <td style="color:#888;font-size:12px">${(subs[sgid]/total*100).toFixed(1)}%</td>
+      </tr>`;
+    });
+  });
+  document.getElementById('features-page-body').innerHTML = rows;
+}
+
+function renderEngineersPage() {
+  if (!D) return;
+  const totalByEng = {}, relByEng = {};
+  D.features.forEach(f => {
+    totalByEng[f.engineer_id] = (totalByEng[f.engineer_id]||0)+1;
+    if (f.lifecycle_status==='released'||f.lifecycle_status==='release_complete')
+      relByEng[f.engineer_id] = (relByEng[f.engineer_id]||0)+1;
+  });
+  document.getElementById('engineers-page-body').innerHTML = D.engineers.map(e => {
+    const col = TEAM_COLORS[e.team]||'#444';
+    return `<tr>
+      <td style="font-weight:700">${e.name}</td>
+      <td><span style="color:${col};font-size:13px;font-weight:700">${TEAM_LABELS[e.team]||e.team}</span></td>
+      <td>${lvl(e.seniority)}</td>
+      <td style="font-size:13px;color:#888">${e.specialty}</td>
+      <td style="font-weight:700">${totalByEng[e.engineer_id]||0}</td>
+      <td>${relByEng[e.engineer_id]||0}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRisksPage() {
+  if (!D) return;
+  const SEV_COLOR = {critical:'#EE352E', high:'#FF6319', medium:'#FCCC0A'};
+  const SEV_TEXT  = {critical:'#fff',    high:'#fff',    medium:'#000'};
+  document.getElementById('risks-page-cards').innerHTML = D.risks.map(r => {
+    const col = SEV_COLOR[r.severity]||'#444';
+    const tc  = SEV_TEXT[r.severity]||'#fff';
+    const mit = r.mitigation_strategy||r.mitigation||'';
+    return `<div style="background:#1a1a1a;border-radius:14px;padding:24px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="background:#222;color:#888;border-radius:8px;padding:4px 10px;font-size:11px;font-family:monospace;flex-shrink:0">${r.risk_id}</span>
+        <div style="font-size:16px;font-weight:700;flex:1">${r.title}</div>
+        <span style="background:${col};color:${tc};border-radius:100px;padding:4px 14px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0">${r.severity}</span>
+      </div>
+      <div style="font-size:14px;color:#ccc;line-height:1.6;margin-bottom:16px">${r.description||r.title}</div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:#888;margin-bottom:${mit?'12px':'0'}">
+        <div><span style="color:#fff;font-weight:700">Probability:</span> ${r.probability}</div>
+        <div><span style="color:#fff;font-weight:700">Impact:</span> ${r.impact}</div>
+        <div><span style="color:#fff;font-weight:700">Owner:</span> ${TEAM_LABELS[r.owner_team]||r.owner_team}</div>
+      </div>
+      ${mit?`<div style="padding:12px;background:#0d0d0d;border-radius:10px;font-size:13px;color:#888"><span style="color:#fff;font-weight:700">Mitigation:</span> ${mit}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════
