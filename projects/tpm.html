@@ -631,7 +631,7 @@
     <div class="card">
       <div class="table-scroll">
         <table class="data-table">
-          <thead><tr><th>Group</th><th>Subgroups</th><th>Total Features</th><th>% of Total</th></tr></thead>
+          <thead><tr><th>Group</th><th>Total Features</th><th>% of Total</th></tr></thead>
           <tbody id="features-page-body"></tbody>
         </table>
       </div>
@@ -1662,17 +1662,14 @@ function renderFeaturesPage() {
     const subs = byGroup[gid];
     const groupTotal = Object.values(subs).reduce((s,c)=>s+c, 0);
     const pct = (groupTotal/total*100).toFixed(1);
-    const sgNames = Object.keys(subs).sort((a,b)=>+a-+b).map(sgid=>subgroupName(sgid)).join(', ');
     rows += `<tr style="background:#111">
       <td style="font-weight:700">${groupName(gid)}</td>
-      <td style="font-size:12px;color:#888">${sgNames}</td>
       <td style="font-weight:700">${groupTotal}</td>
       <td style="color:#888">${pct}%</td>
     </tr>`;
     Object.keys(subs).sort((a,b)=>+a-+b).forEach(sgid => {
       rows += `<tr style="background:#0d0d0d">
         <td style="padding-left:32px;color:#888;font-size:13px">${subgroupName(sgid)}</td>
-        <td></td>
         <td style="color:#888;font-size:13px">${subs[sgid]}</td>
         <td style="color:#888;font-size:12px">${(subs[sgid]/total*100).toFixed(1)}%</td>
       </tr>`;
